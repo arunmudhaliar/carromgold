@@ -1,0 +1,7 @@
+varying vec4 uv_out_ShadowMap;
+uniform mat4 GEAR_SHADOW_DEPTH_BIAS_MVP;
+void main()
+{
+	uv_out_ShadowMap = GEAR_SHADOW_DEPTH_BIAS_MVP * vIN_Position;
+	gl_Position = vertex_function();
+}

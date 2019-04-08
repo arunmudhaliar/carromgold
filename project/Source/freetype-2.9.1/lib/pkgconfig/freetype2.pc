@@ -1,0 +1,14 @@
+prefix=/Users/amudaliar/Documents/PROJECTS/PERSONAL/GDCRepo/GDCPhysics/Source/freetypeBuild
+exec_prefix=/Users/amudaliar/Documents/PROJECTS/PERSONAL/GDCRepo/GDCPhysics/Source/freetypeBuild
+libdir=/Users/amudaliar/Documents/PROJECTS/PERSONAL/GDCRepo/GDCPhysics/Source/freetypeBuild/lib
+includedir=/Users/amudaliar/Documents/PROJECTS/PERSONAL/GDCRepo/GDCPhysics/Source/freetypeBuild/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 22.1.16
+Requires:
+Requires.private: 
+Libs: -L${libdir} -lfreetype
+Libs.private: -lz -lbz2
+Cflags: -I${includedir}/freetype2
