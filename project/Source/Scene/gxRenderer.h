@@ -30,7 +30,8 @@ public:
 	void setProjectionMatrixToGL(matrix4x4f* matrix);
 	void setViewMatrixToGL(matrix4x4f* matrix);
 	void setViewProjectionMatrix(matrix4x4f* matrix);
-
+    void setOrthoProjectionMatrix(matrix4x4f* matrix);
+    
 	const vector2f& getViewPortSz()			{	return viewPortRectangle.m_size;			}
 	const gxRectf& getViewPortRect()		{	return viewPortRectangle;					}
 

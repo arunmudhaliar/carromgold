@@ -1230,7 +1230,7 @@
 					"USE_ProgrammablePipeLine=1",
 					"GEAR_APPLE=1",
 					"USE_OPENAL=1",
-					"ENABLE_MULTIPLAYER=1",
+					"ENABLE_MULTIPLAYER=0",
 				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Source/websocketpp-master\"",

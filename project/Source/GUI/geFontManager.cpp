@@ -340,9 +340,9 @@ int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCen
     
     if(bShadowed)
     {
-        transformTM.setRotationMatrix(180, true, 0, 0);
+//        transformTM.setRotationMatrix(180, true, 0, 0);
         transformTM.setPosition(x+1, y+1+m_fYOffset, 0);
-        transformTM= *m_pRendererPtr->getViewProjectionMatrix() * transformTM;
+        transformTM= *m_pRendererPtr->getOrthoProjectionMatrix() * transformTM;
         const float* u_mvp_m4x4_shadow=transformTM.getMatrix();
         m_pFontShaderPtr->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4_shadow, false, 4);
         float shadow_color[]={0.0f, 0.0f, 0.0f, 0.7f};
@@ -352,9 +352,9 @@ int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCen
         transformTM.identity(); //reset the matrix
     }
     
-    transformTM.setRotationMatrix(180, true, 0, 0);
+//    transformTM.setRotationMatrix(180, true, 0, 0);
     transformTM.setPosition(x, y+m_fYOffset, 0);
-    transformTM= *m_pRendererPtr->getViewProjectionMatrix() * transformTM;
+    transformTM= *m_pRendererPtr->getOrthoProjectionMatrix() * transformTM;
     const float* u_mvp_m4x4=transformTM.getMatrix();
     m_pFontShaderPtr->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4, false, 4);
     m_pFontShaderPtr->sendUniform4fv("u_color_v4", m_cszRGBA);

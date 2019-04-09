@@ -113,21 +113,24 @@ void Scene::InternalGLStates() {
 void Scene::Resize(float cx, float cy) {
     cx*=0.5f; cy*=0.5f;     // for retina display.
     windowSize.set(cx, cy);
-//    glViewport(0, 0, (int)cx, (int)cy);
-    renderer.setViewPort(0, 0, cx, cy);
 
+    renderer.setViewPort(0, 0, cx, cy);
     gxRectf viewportRect(renderer.getViewPortRect());
     vector2f centerAlignedPos(viewportRect.m_pos-viewportRect.m_size*0.5f);
     projectionMatrix.setOrtho(centerAlignedPos.x, centerAlignedPos.x+viewportRect.m_size.x, centerAlignedPos.y, centerAlignedPos.y+viewportRect.m_size.y, 0, 100);
     renderer.setProjectionMatrixToGL(&projectionMatrix);
 
-//    renderer.setMainCameraEye(getAttachedObject()->getWorldMatrix()->getPosition());
-//    inverseTransformationMatrix = getAttachedObject()->getWorldMatrix()->getInverse();
+    // for GUI fonts
+    matrix4x4f orthoMatrix;
+    orthoMatrix.setOrtho(0, cx, cy, 0, 0, 100);
+    //
+    
     float scale = BOARD_SIZE.x/cx;
     worldScale.setScale(scale, scale, scale);
     inverseTransformationMatrix = worldScale.getInverse();
     viewProjectionMatrix = projectionMatrix * inverseTransformationMatrix;
     
+    renderer.setOrthoProjectionMatrix(&orthoMatrix);
     renderer.setViewMatrixToGL(&inverseTransformationMatrix);
     renderer.setViewProjectionMatrix(&viewProjectionMatrix);
     
@@ -192,13 +195,17 @@ void Scene::DrawStats() {
     glScalef(1, -1, 1);
 #endif
     int iterator = 0;
+    int yOffset = 20;
+#if GEAR_ANDROID
+    yOffset = 80;
+#endif
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("FPS %3.2f", Timer::getFPS()).c_str(), 45, -(60+(iterator++)*20), 200);
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PING %d ms", this->pingTimeFromOtherPlayer).c_str(), 45, -(60+(iterator++)*20), 200);
 //    if (this->gameState == GAME_START) {
 //        geFontManager::g_pFontArial10_84Ptr->drawString((this->playerType == PLAYER_FIRST) ? "PLAYER 1" : "PLAYER 2", 45, -(60+(iterator++)*20), 200);
 //    }
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("ELAPSED %lu ms", this->physicsSolver.GetElapsedTime()).c_str(), 45, -(60+(iterator++)*20), 200);
-    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), -windowSize.x*0.45f, windowSize.y*0.45-iterator*20, 200);
+    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), 20, yOffset + ++iterator*20, 200);
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("BALL VEL : %d", XTOI(this->ball.GetRBVelocity().lengthx())).c_str(), 45, -(60+(iterator++)*20), 200);
 
 //        geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 1: %s", player1Score.c_str()).c_str(), 0, 0, 200);

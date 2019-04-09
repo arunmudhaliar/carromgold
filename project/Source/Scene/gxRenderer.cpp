@@ -23,11 +23,12 @@ void gxRenderer::setViewPort(float x, float y, float cx, float cy)
 	if(cy<=1.0f)
 		cy=1.0f;
 
-	gxRectf viewportRect(x, y, cx, cy);
-	vector2f centerAlignedPos(viewportRect.m_pos-viewportRect.m_size*0.5f);
-	orthogonalProjectionMatrix.setOrtho(centerAlignedPos.x, centerAlignedPos.x+viewportRect.m_size.x, centerAlignedPos.y+viewportRect.m_size.y, centerAlignedPos.y, -100.0f, 1000.0f);
 	viewPortRectangle.set(x, y, cx, cy);
 	glViewport((int)x, (int)y, (int)cx, (int)cy);
+}
+
+void gxRenderer::setOrthoProjectionMatrix(matrix4x4f* matrix) {
+    orthogonalProjectionMatrix = *matrix;
 }
 
 void gxRenderer::setProjectionMatrixToGL(matrix4x4f* matrix)
