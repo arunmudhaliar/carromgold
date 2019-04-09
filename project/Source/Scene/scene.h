@@ -27,20 +27,14 @@
 #endif
 
 class Scene
-#if 0
-: protected NetworkManagerDelegate,
+#if ENABLE_MULTIPLAYER
+: protected NetworkManagerDelegate
 #endif
 {
 private:
     Scene();
     
 public:
-    
-    enum PLAYER_TYPE {
-        PLAYER_FIRST,
-        PLAYER_SECOND,
-        PLAYER_TYPE_MAX
-    };
     
     enum MOUSE_EVENT {
         MOUSE_UP,
@@ -66,14 +60,13 @@ public:
     void MouseBtnUp(int mx, int my);
     void MouseMove(int mx, int my);
     
-    PLAYER_TYPE GetPlayerType() { return this->playerType; }
     vector2x WindowToBoard(const vector2x& windowCoord);
     
 protected:
     vector2i windowSize;
     Board board;
     
-#if 0
+#if ENABLE_MULTIPLAYER
     // NetworkManagerDelegate
     void OnNetworkMessage(const std::string& msg) override;
     void OnNetworkFail() override;
@@ -88,8 +81,6 @@ protected:
 private:
     
     void InternalGLStates();
-    
-    PLAYER_TYPE playerType;
 
 #if GEAR_APPLE
     SDL_Window* window;

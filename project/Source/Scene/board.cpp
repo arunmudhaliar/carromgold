@@ -19,6 +19,7 @@
 #define AIM_FROM_GRAB 0
 
 Board::Board() {
+    this->playerType = PLAYER_TYPE_MAX;
     this->gameState = GAME_STATE_MAX;
     this->elapsedTimeSinceFire = 0;
     this->soundEnginePtr = nullptr;
@@ -33,9 +34,10 @@ Board::~Board() {
 
 void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
     this->soundEnginePtr = soundEnginePtr;
-    this->bgSprite.setOffset(0, BOARD_OFFSET.y);
+    this->bgSprite.setOffset(0, 0);
     this->bgSprite.loadTexture(&textureManager, cpp_getPath("/res/sprites/bg.png").c_str());
     this->bgSprite.setScale(viewPort.x/bgSprite.getClipWidth(), viewPort.y/bgSprite.getClipHeight());
+    
     
     this->boardSprite.setOffset(0, 0);
     this->boardSprite.loadTexture(&textureManager, cpp_getPath("/res/sprites/CarromBoard_1.png").c_str());
@@ -50,13 +52,17 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
     vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
     strickerPos.y=0;
-    strickerPos+=BOARD_OFFSETx;
     strickerPos.y+=FTOX(BOARD_SIZE.y*0.172f);
     stricker.InitStricker(BALL_SIZE*1.15f, 0.3, 0.029f, leftOriginPosx+strickerPos, textureManager, this->soundEnginePtr);
     
     this->SetGameState(GAME_INIT);
+#if !ENABLE_MULTIPLAYER
     this->SetGameState(GAME_START);
-    this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
+#endif
+    // TODO : need to set from the network data.
+//    this->boardMatrix.setRotationMatrix(180, 0, 0, true);
+    this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
+    this->boardMatrixInv = this->boardMatrix.getInverse();
 }
 
 void Board::UpdateBoard() {
@@ -66,7 +72,6 @@ void Board::UpdateBoard() {
         if (this->gameState==GAME_PLAYER_FIRE && this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
             vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
             strickerPos.y=0;
-            strickerPos+=BOARD_OFFSETx;
             strickerPos.y+=FTOX(BOARD_SIZE.y*0.172f);
             vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
             stricker.SetRBPosition(leftOriginPosx+strickerPos, true);
@@ -112,13 +117,14 @@ void Board::OnFixedUpdate(intx fixedDT) {
 }
 
 void Board::DrawBoard(const matrix4x4f& viewProjection) {
+    auto mvp = viewProjection * boardMatrix;
 #if USE_ProgrammablePipeLine
     auto guishader = HWShaderManager::GetHWShaderManager().GetHWShader(2);
     
     // bg
     guishader->enableProgram();
     bgSprite.draw(guishader, viewProjection);
-    boardSprite.draw(guishader, viewProjection);
+    boardSprite.draw(guishader, mvp);
     guishader->disableProgram();
 #else
     boardSprite.draw();
@@ -134,29 +140,32 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
     
     // render objects here
     if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
-        this->stricker.DrawPreHelperSprites(viewProjection);
+        this->stricker.DrawPreHelperSprites(mvp);
     }
-    stricker.draw(viewProjection);
+    stricker.draw(mvp);
     if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
-        this->stricker.DrawPostHelperSprites(viewProjection);
+        this->stricker.DrawPostHelperSprites(mvp);
     }
     
-    ground.draw(viewProjection);
-    leftWall.draw(viewProjection);
-    rightWall.draw(viewProjection);
-    topWall.draw(viewProjection);
+    ground.draw(mvp);
+    leftWall.draw(mvp);
+    rightWall.draw(mvp);
+    topWall.draw(mvp);
     
     for(auto c : coins) {
-        c.second->draw(viewProjection);
+        c.second->draw(mvp);
     }
     
     //holes
-    holes[0].draw(viewProjection);
-    holes[1].draw(viewProjection);
-    holes[2].draw(viewProjection);
-    holes[3].draw(viewProjection);
+    holes[0].draw(mvp);
+    holes[1].draw(mvp);
+    holes[2].draw(mvp);
+    holes[3].draw(mvp);
 }
 
+void Board::TryStartGame() {
+    SetGameState(GAME_START);
+}
 
 void Board::SetGameState(GAME_STATE state) {
     if (this->gameState!=state) {
@@ -204,16 +213,16 @@ void Board::OnGameInit() {
     // init scene
     physicsSolver.InitSolver(this);
 
-    ground.InitWall(vector2x(BOARD_SIZEx.x, BOTTOM_TOP_WALL_HEIGHTx), leftOriginPosx+(BOARD_OFFSETx - vector2x(0, ITOX(25))), this->soundEnginePtr);
-    leftWall.InitWall(vector2x(LEFT_RIGHT_WALL_WIDTHx, BOARD_SIZEx.y), leftOriginPosx+vector2x(-ITOX(25), BOARD_OFFSETx.y), this->soundEnginePtr);
-    rightWall.InitWall(vector2x(LEFT_RIGHT_WALL_WIDTHx, BOARD_SIZEx.y), leftOriginPosx+vector2x(BOARD_SIZEx.x-LEFT_RIGHT_WALL_WIDTHx+ITOX(25), BOARD_OFFSETx.y), this->soundEnginePtr);
-    topWall.InitWall(vector2x(BOARD_SIZEx.x, BOTTOM_TOP_WALL_HEIGHTx), leftOriginPosx+vector2x(0, BOARD_OFFSETx.y+BOARD_SIZEx.y-BOTTOM_TOP_WALL_HEIGHTx+ITOX(25)), this->soundEnginePtr);
+    ground.InitWall(vector2x(BOARD_SIZEx.x, BOTTOM_TOP_WALL_HEIGHTx), leftOriginPosx+(- vector2x(0, ITOX(25))), this->soundEnginePtr);
+    leftWall.InitWall(vector2x(LEFT_RIGHT_WALL_WIDTHx, BOARD_SIZEx.y), leftOriginPosx+vector2x(-ITOX(25), 0), this->soundEnginePtr);
+    rightWall.InitWall(vector2x(LEFT_RIGHT_WALL_WIDTHx, BOARD_SIZEx.y), leftOriginPosx+vector2x(BOARD_SIZEx.x-LEFT_RIGHT_WALL_WIDTHx+ITOX(25), 0), this->soundEnginePtr);
+    topWall.InitWall(vector2x(BOARD_SIZEx.x, BOTTOM_TOP_WALL_HEIGHTx), leftOriginPosx+vector2x(0, BOARD_SIZEx.y-BOTTOM_TOP_WALL_HEIGHTx+ITOX(25)), this->soundEnginePtr);
     
     
-    holes[0].initHole(24, leftOriginPosx + vector2x(BOARD_OFFSETx.x+ITOX(36), BOARD_OFFSETx.y+ITOX(36)));
-    holes[1].initHole(24, leftOriginPosx + vector2x(BOARD_OFFSETx.x+ITOX(36), BOARD_OFFSETx.y+BOARD_SIZEx.y-ITOX(36)));
-    holes[2].initHole(24, leftOriginPosx + vector2x(BOARD_OFFSETx.x+BOARD_SIZEx.x-ITOX(36), BOARD_OFFSETx.y+ITOX(36)));
-    holes[3].initHole(24, leftOriginPosx + vector2x(BOARD_OFFSETx.x+BOARD_SIZEx.x-ITOX(36), BOARD_OFFSETx.y+BOARD_SIZEx.y-ITOX(36)));
+    holes[0].initHole(24, leftOriginPosx + vector2x(ITOX(36), ITOX(36)));
+    holes[1].initHole(24, leftOriginPosx + vector2x(ITOX(36), BOARD_SIZEx.y-ITOX(36)));
+    holes[2].initHole(24, leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), ITOX(36)));
+    holes[3].initHole(24, leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), BOARD_SIZEx.y-ITOX(36)));
     
     physicsSolver.AddRigidBody(&stricker);
     
@@ -232,7 +241,7 @@ void Board::OnGameInit() {
 
 void Board::ResetCoins() {
     // add coins
-    vector2x center=BOARD_OFFSETx;
+    vector2x center;
     int ballId=0;
     
     const float COIN_FRICTION_FACTOR = 0.05f;
@@ -294,6 +303,27 @@ void Board::ResetCoins() {
 }
 
 void Board::OnGameStart() {
+    switch (this->playerType) {
+        case PLAYER_FIRST: {
+            this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
+            this->boardMatrixInv = this->boardMatrix.getInverse();
+        }
+        break;
+            
+        case PLAYER_SECOND: {
+            this->boardMatrix.setRotationMatrix(180, 0, 0, true);
+            this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
+            this->boardMatrixInv = this->boardMatrix.getInverse();
+        }
+        break;
+        default: {
+            this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
+            this->boardMatrixInv = this->boardMatrix.getInverse();
+        }
+            break;
+    }
+    
+    this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
 }
 
 
@@ -313,15 +343,29 @@ void Board::OnGameReset() {
 }
 
 void Board::MouseBtnUp(const vector2x& pos) {
-    this->stricker.Cmd_TryFire(pos, [this](){
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+        return;
+    }
+    
+    auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
+    this->stricker.Cmd_TryFire(transformedPos, [this](){
         this->SetGameState(GAME_PLAYER_FIRE);
     });
 }
 
 void Board::MouseBtnDown(const vector2x& pos) {
-    this->stricker.Cmd_TryGrab(pos);
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+        return;
+    }
+    
+    auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
+    this->stricker.Cmd_TryGrab(transformedPos);
 }
 
 void Board::MouseMove(const vector2x& pos) {
-    this->stricker.Cmd_TryMove(pos);
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+        return;
+    }
+    auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
+    this->stricker.Cmd_TryMove(transformedPos);
 }

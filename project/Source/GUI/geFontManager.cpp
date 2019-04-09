@@ -333,15 +333,16 @@ int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCen
     glBindTexture(GL_TEXTURE_2D, m_iTexID);	
     //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE);
     
     matrix4x4f transformTM;
     
     if(bShadowed)
     {
-        transformTM.setPosition(x+1, y+1+m_fYOffset, -1.0f);
-        transformTM= *m_pRendererPtr->getOrthoProjectionMatrix() * transformTM;
+        transformTM.setRotationMatrix(180, true, 0, 0);
+        transformTM.setPosition(x+1, y+1+m_fYOffset, 0);
+        transformTM= *m_pRendererPtr->getViewProjectionMatrix() * transformTM;
         const float* u_mvp_m4x4_shadow=transformTM.getMatrix();
         m_pFontShaderPtr->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4_shadow, false, 4);
         float shadow_color[]={0.0f, 0.0f, 0.0f, 0.7f};
@@ -351,8 +352,9 @@ int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCen
         transformTM.identity(); //reset the matrix
     }
     
-    transformTM.setPosition(x, y+m_fYOffset, -1.0f);
-    transformTM= *m_pRendererPtr->getOrthoProjectionMatrix() * transformTM;
+    transformTM.setRotationMatrix(180, true, 0, 0);
+    transformTM.setPosition(x, y+m_fYOffset, 0);
+    transformTM= *m_pRendererPtr->getViewProjectionMatrix() * transformTM;
     const float* u_mvp_m4x4=transformTM.getMatrix();
     m_pFontShaderPtr->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4, false, 4);
     m_pFontShaderPtr->sendUniform4fv("u_color_v4", m_cszRGBA);

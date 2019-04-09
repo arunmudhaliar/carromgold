@@ -18,6 +18,12 @@
 
 class Board : protected FixedUpdateObserver {
 public:
+    enum PLAYER_TYPE {
+        PLAYER_FIRST,
+        PLAYER_SECOND,
+        PLAYER_TYPE_MAX
+    };
+    
     enum GAME_STATE {
         GAME_INIT,
         GAME_START,
@@ -41,6 +47,11 @@ public:
     void MouseMove(const vector2x& pos);
     
     Stricker& GetStricker() { return this->stricker; }
+    GAME_STATE GetBoardState() { return this-> gameState; }
+    PLAYER_TYPE GetPlayerType() { return this->playerType; }
+    void SetPlayerType(PLAYER_TYPE type) { this->playerType = type; }
+    
+    void TryStartGame();
     
 protected:
     
@@ -58,6 +69,10 @@ protected:
     void OnGameReset();
     void OnFixedUpdate(intx fixedDT) override;
     
+    PLAYER_TYPE playerType;
+    
+    matrix4x4f boardMatrix;
+    matrix4x4f boardMatrixInv;
     Solver physicsSolver;
     GAME_STATE gameState;
     Stricker stricker;

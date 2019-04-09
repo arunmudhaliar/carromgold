@@ -25,8 +25,6 @@ Scene& Scene::GetInstance() {
 }
 
 Scene::Scene() {
-
-    this->playerType = PLAYER_TYPE_MAX;
 #if GEAR_APPLE
     this->window = nullptr;
 #endif
@@ -93,6 +91,10 @@ void Scene::InitScene(float cx, float cy) {
     
     debugBtnList.push_back(&debugButton1);
     debugBtnList.push_back(&debugButton2);
+    
+#if ENABLE_MULTIPLAYER
+    NetworkManager::GetInstance().InitNetwork(this);
+#endif
 }
 
 void Scene::InternalGLStates() {
@@ -143,7 +145,7 @@ vector2x Scene::WindowToBoard(const vector2x& windowCoord) {
     gxRectf viewportRect(renderer.getViewPortRect());
     vector2f boardCenterf(viewportRect.m_size*0.5f - viewportRect.m_pos);
     vector2x boardCenterx(FTOX(boardCenterf.x), FTOX(boardCenterf.y));
-//    boardCenterx-=BOARD_OFFSETx;
+    //boardCenterx-=(BOARD_OFFSETx*FTOX(0.5f));
     
     float scale = BOARD_SIZE.x/this->windowSize.x;
     
@@ -166,7 +168,7 @@ void Scene::Render() {
     
     this->board.DrawBoard(*renderer.getViewProjectionMatrix());
     
-    // DrawStats();
+     DrawStats();
     
     // Debug panel
     for(auto b : debugBtnList) {
@@ -189,19 +191,20 @@ void Scene::DrawStats() {
     glPushMatrix();
     glScalef(1, -1, 1);
 #endif
-//    int iterator = 0;
-////    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("FPS %3.2f", Timer::getFPS()).c_str(), 45, -(60+(iterator++)*20), 200);
-////    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PING %d ms", this->pingTimeFromOtherPlayer).c_str(), 45, -(60+(iterator++)*20), 200);
+    int iterator = 0;
+//    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("FPS %3.2f", Timer::getFPS()).c_str(), 45, -(60+(iterator++)*20), 200);
+//    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PING %d ms", this->pingTimeFromOtherPlayer).c_str(), 45, -(60+(iterator++)*20), 200);
 //    if (this->gameState == GAME_START) {
 //        geFontManager::g_pFontArial10_84Ptr->drawString((this->playerType == PLAYER_FIRST) ? "PLAYER 1" : "PLAYER 2", 45, -(60+(iterator++)*20), 200);
 //    }
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("ELAPSED %lu ms", this->physicsSolver.GetElapsedTime()).c_str(), 45, -(60+(iterator++)*20), 200);
-////    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), 45, -(60+(iterator++)*20), 200);
-////    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("BALL VEL : %d", XTOI(this->ball.GetRBVelocity().lengthx())).c_str(), 45, -(60+(iterator++)*20), 200);
-//
+    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), -windowSize.x*0.45f, windowSize.y*0.45-iterator*20, 200);
+//    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("BALL VEL : %d", XTOI(this->ball.GetRBVelocity().lengthx())).c_str(), 45, -(60+(iterator++)*20), 200);
+
+//        geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 1: %s", player1Score.c_str()).c_str(), 0, 0, 200);
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 1: %s", player1Score.c_str()).c_str(), windowSize.x*0.09f, -(windowSize.y*0.85f), 200);
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 2: %s", player2Score.c_str()).c_str(), windowSize.x*0.82f, -(windowSize.y*0.85f), 200);
-//
+
 //    if (this->stricker.IsGrabed()) {
 //        geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("GRABBED").c_str(), windowSize.x*0.82f, -(windowSize.y*0.8f), 200);
 //    }
@@ -267,35 +270,39 @@ void Scene::SendPing() {
 //    }
 }
 
-#if 0
+#if ENABLE_MULTIPLAYER
 void Scene::OnNetworkMessage(const std::string& msg) {
+//#if 0
 //    printf("Msg from other player %s\n", msg.c_str());
+    auto gameState = this->board.GetBoardState();
     if (msg == "first" || msg == "second") {
-        if (this->gameState == GAME_INIT || this->gameState == GAME_RESET) {
+        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
 //            this->physicsSolver.RemoveBoxCollider(&player1);
 //            this->physicsSolver.RemoveBoxCollider(&player2);
-//            if (msg == "first") {
-//                this->playerType = PLAYER_FIRST;
+            if (msg == "first") {
+                this->board.SetPlayerType(Board::PLAYER_FIRST);
 //                this->physicsSolver.AddBoxCollider(&player1);
-//            } else if (msg == "second") {
-//                this->playerType = PLAYER_SECOND;
+            } else if (msg == "second") {
+                this->board.SetPlayerType(Board::PLAYER_SECOND);
 //                this->physicsSolver.AddBoxCollider(&player2);
-//            }
+            }
             NetworkManager::GetInstance().SendMessage("ping");
-            pingTimeFromOtherPlayer = 0;
-            pingStartTime = Timer::getCurrentTimeInMilliSec();
+//            pingTimeFromOtherPlayer = 0;
+//            pingStartTime = Timer::getCurrentTimeInMilliSec();
         }
     } else if (msg == "ping") {
-        pingTimeFromOtherPlayer = Timer::getCurrentTimeInMilliSec()-pingStartTime;
-        printf("PING TIME %lu ms.\n", pingTimeFromOtherPlayer);
-        if (this->gameState == GAME_INIT || this->gameState == GAME_RESET) {
+//        pingTimeFromOtherPlayer = Timer::getCurrentTimeInMilliSec()-pingStartTime;
+//        printf("PING TIME %lu ms.\n", pingTimeFromOtherPlayer);
+        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
             NetworkManager::GetInstance().SendMessage("ping_akn");
         }
     } else if (msg == "startgame") {
-        if (this->gameState == GAME_INIT || this->gameState == GAME_RESET) {
-            SetGameState(GAME_START);
+        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
+            this->board.TryStartGame();
         }
-    } else if (msg == "boost") {
+    }
+    
+    /*else if (msg == "boost") {
         ApplyBoost(0, 0);
     } else {
         std::vector<std::string> lines;
@@ -365,6 +372,8 @@ void Scene::OnNetworkMessage(const std::string& msg) {
             }
         }
     }
+     */
+//#endif
 }
 
 void Scene::OnNetworkFail() {
