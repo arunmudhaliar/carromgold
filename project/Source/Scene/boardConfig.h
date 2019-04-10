@@ -14,8 +14,8 @@
 #define BOARD_SIZE vector2f(600, 600)
 #define BOARD_SIZEx vector2x(ITOX(600), ITOX(600))
 
-#define BOARD_OFFSET vector2f(0, 60)
-#define BOARD_OFFSETx vector2x(0, ITOX(60))
+#define BOARD_OFFSET vector2f(0, 0)
+#define BOARD_OFFSETx vector2x(0, 0)
 
 #define MAX_STRICK_LENGHT   130
 #define MAX_STRICK_POWER   50000

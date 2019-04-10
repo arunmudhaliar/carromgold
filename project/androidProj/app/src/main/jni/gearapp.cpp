@@ -65,7 +65,7 @@ JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv 
 
 static int gear_start_app(struct engine* engine)
 {
-    LOGI("gdc physics android\n");
+    LOGI("carromgold android\n");
 	return 0;
 }
 

@@ -80,7 +80,7 @@ void Scene::InitScene(float cx, float cy) {
     
     // DEBUG PANEL
     float btn_width = 200.0f;
-    float btn_height = 90.0f;
+    float btn_height = 80.0f;
     debugButton1.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test1", [this](){
         this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION1);
     });
@@ -88,9 +88,13 @@ void Scene::InitScene(float cx, float cy) {
     debugButton2.initButton(worldScale*vector2f(cx*0.48f-btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test2", [this](){
         this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION2);
     });
+    debugButton3.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.45f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "test3", [this](){
+        this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION3);
+    });
     
     debugBtnList.push_back(&debugButton1);
     debugBtnList.push_back(&debugButton2);
+    debugBtnList.push_back(&debugButton3);
     
 #if ENABLE_MULTIPLAYER
     NetworkManager::GetInstance().InitNetwork(this);

@@ -158,7 +158,13 @@ void HWShaderManager::LoadDefaultShaders()
 	else
 		GX_DELETE(pShader);
 
-
+    //uv_with_color.glsl
+    pShader=new gxHWShader();
+    if(pShader->loadShader(resource_dir_root_path+"hwshader/uv_with_color.glsl"))    //8
+        hwShaderList.push_back(pShader);
+    else
+        GX_DELETE(pShader);
+    
 	//surface shaders
 //    LoadSurfaceShader(resource_dir_root_path+"surfaceShader/Diffuse.shader");
 //    LoadSurfaceShader(resource_dir_root_path+"surfaceShader/Diffuse_vlit.shader");

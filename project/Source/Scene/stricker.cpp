@@ -16,11 +16,15 @@ Stricker::Stricker() : Ball() {
     this->moveToolRotation = 0.0f;
     this->powerScale = 1.0f;
     this->breakShot = true;
-    SetStrickerInputOption(OPTION1);
+    SetStrickerInputOption(OPTION3);
     // Aim Cone
     memset(this->aimConeVertexBuffer, 0 , sizeof(this->aimConeVertexBuffer));
     memset(this->aimConeColorBuffer, 0 , sizeof(this->aimConeColorBuffer));
     memset(this->aimConeLineColorBuffer, 0 , sizeof(this->aimConeLineColorBuffer));
+    
+    // Aim ring
+    memset(this->aimRingVertexBuffer, 0 , sizeof(this->aimRingVertexBuffer));
+    memset(this->aimRingColorBuffer, 0 , sizeof(this->aimRingColorBuffer));
     
     // Grab circle
     memset(this->grabCircleVertexBuffer, 0 , sizeof(this->grabCircleVertexBuffer));
@@ -84,6 +88,33 @@ void Stricker::OnPostInitBall() {
         this->aimConeLineColorBuffer[cntr*4+3] = 0.25f;
     }
     
+    // Aim ring
+    cntr=0;
+    float innerRingRadius = this->size*STRICKER_GRAB_INNER_RADIUS_SCALE;
+    float outerRingRadius = this->size*STRICKER_GRAB_OUTER_RADIUS_SCALE;
+    for(int xx=-AIMCONE_RING_ANGLE; xx<=AIMCONE_RING_ANGLE; xx+=AIMCONE_RING_ANGLE_DELTA) {
+        float cso=outerRingRadius*cos(DEG2RAD((float)(xx-90)));
+        float sno=outerRingRadius*sin(DEG2RAD((float)(xx-90)));
+        float csi=innerRingRadius*cos(DEG2RAD((float)(xx-90)));
+        float sni=innerRingRadius*sin(DEG2RAD((float)(xx-90)));
+        this->aimRingVertexBuffer[cntr*4+0]=csi;
+        this->aimRingVertexBuffer[cntr*4+1]=sni;
+        this->aimRingVertexBuffer[cntr*4+2]=cso;
+        this->aimRingVertexBuffer[cntr*4+3]=sno;
+        
+        float clr_i = 1.0f;
+        float clr_o = 1.0f;
+        this->aimRingColorBuffer[cntr*8+0] = clr_i;
+        this->aimRingColorBuffer[cntr*8+1] = clr_i;
+        this->aimRingColorBuffer[cntr*8+2] = clr_i;
+        this->aimRingColorBuffer[cntr*8+3] = 0.3f;
+        
+        this->aimRingColorBuffer[cntr*8+4] = clr_o;
+        this->aimRingColorBuffer[cntr*8+5] = clr_o;
+        this->aimRingColorBuffer[cntr*8+6] = clr_o;
+        this->aimRingColorBuffer[cntr*8+7] = 0.1f;
+        cntr++;
+    }
     
     // Grab circle
     cntr=0;
@@ -239,8 +270,13 @@ void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
         this->DrawPowerCircle(viewProjection);
         this->DrawGrabCircle(viewProjection);
     } else if (this->inputIsMove){
-//        this->DrawAimCone(viewProjection);
+        if (this->inputOption == OPTION3) {
+            this->DrawAimRing(viewProjection);
+        }
     } else {
+        if (this->inputOption == OPTION3) {
+            this->DrawAimRing(viewProjection);
+        }
 //        this->DrawGrabCircle(viewProjection);
 //        this->DrawAimCone(viewProjection);
     }
@@ -344,6 +380,48 @@ void Stricker::DrawAimCone(const matrix4x4f& viewProjection) {
 #endif
 }
 
+void Stricker::DrawAimRing(const matrix4x4f& viewProjection) {
+#if USE_ProgrammablePipeLine
+    auto shader = HWShaderManager::GetHWShaderManager().GetHWShader(1);
+    shader->enableProgram();
+    matrix4x4f dummyTM;
+    dummyTM.copyMatrix(*this);
+    
+    matrix4x4f rotationTM;
+    //    rotationTM.setRotationMatrix(rotation, 0, 0, true);
+    const float* u_mvp_m4x4= (viewProjection * (dummyTM*rotationTM)).getMatrix();
+    shader->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4, false, 4);
+    
+#if GEAR_APPLE
+    glEnable(GL_LINE_SMOOTH);
+    glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+#endif
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+//    glDisable(GL_CULL_FACE);
+    glVertexAttribPointer(shader->getAttribLoc("a_vertex_coord_v4"), 2, GL_FLOAT, GL_FALSE, 0, this->aimRingVertexBuffer);
+    glEnableVertexAttribArray(shader->getAttribLoc("a_vertex_coord_v4"));
+    
+    glVertexAttribPointer(shader->getAttribLoc("a_color_coord_v4"), 4, GL_FLOAT, GL_FALSE, 0, this->aimRingColorBuffer);
+    glEnableVertexAttribArray(shader->getAttribLoc("a_color_coord_v4"));
+    int points = ((AIMCONE_RING_ANGLE/AIMCONE_RING_ANGLE_DELTA)*4 + 2);
+    
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, points);
+    //    glBlendFunc(GL_ONE, GL_ONE);
+    
+    glDisableVertexAttribArray(shader->getAttribLoc("a_color_coord_v4"));
+    glDisableVertexAttribArray(shader->getAttribLoc("a_vertex_coord_v4"));
+    
+    glDisable(GL_BLEND);
+#if GEAR_APPLE
+    glDisable(GL_LINE_SMOOTH);
+#endif
+    shader->disableProgram();
+#endif
+}
+
 void Stricker::DrawPowerCircle(const matrix4x4f& viewProjection) {
 #if USE_ProgrammablePipeLine
     auto shader = HWShaderManager::GetHWShaderManager().GetHWShader(1);
@@ -409,6 +487,54 @@ void Stricker::UpdateStricker3(intx fixedDT) {
     this->inputPrevPos = this->inputCurrentPos;
     auto inputDiff_magx = inputDiffx.lengthx();
     auto scaled_inner_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_INNER_RADIUS_SCALE));
+
+    if (!this->IsGrabed()) {
+        this->moveToolSprite.setRotation(this->moveToolRotation);
+    }
+    
+    const intx speedToMoveUnderGrabPosx = FTOX(24.0f);
+    if (this->IsGrabed() && this->inputIsMove) {
+        this->moveToolSprite.setRotation(this->moveToolRotation);
+        // just move
+        vector2x inputDeltax = inputCurrentToPrevDiffx;
+        inputDeltax.y=0;
+        auto toMove = inputDeltax*MULTX(fixedDT, speedToMoveUnderGrabPosx);
+        MoveStricker(fixedDT, *this, inputDeltax);
+        auto updatedStrickerPos = this->GetRBPosition();
+        this->moveToolSprite.setPos(XTOF(updatedStrickerPos.x), XTOF(updatedStrickerPos.y));
+    } else if (this->IsGrabed() && this->inputIsAim) {
+        if (inputDiff_magx <  scaled_inner_radiusx) {
+            this->inputIsMove = true;
+            this->inputIsAim = false;
+        } else {
+            // just aim
+            vector2f diff = vector2f(XTOF(inputDiffx.x), XTOF(inputDiffx.y));
+            float angle = RAD2DEG(atan2(-diff.x, diff.y));
+            float powerLength = diff.Length()-XTOF(scaled_inner_radiusx);
+            powerLength = MIN(powerLength, MAX_STRICK_LENGHT);
+            this->powerScale = 1.0f + powerLength/MAX_STRICK_LENGHT;
+            float dirSpriteScale = powerLength/directionSprite.getClipHeight();
+            directionSprite.setTile(1.0f, dirSpriteScale*1.75f);
+            directionSprite.setScale(1.0f, dirSpriteScale*1.75f);
+            directionSprite.setRotation(angle);
+            
+            directionSprite.setPos(XTOF(strickerPosx.x), XTOF(strickerPosx.y));
+        }
+    }
+}
+
+void Stricker::UpdateStricker2(intx fixedDT) {
+    float rotationSpeed = 60.0f;
+    this->moveToolRotation += (rotationSpeed*XTOF(fixedDT));
+    if (this->moveToolRotation>=360.0f) {
+        this->moveToolRotation = 0.0f;
+    }
+    auto strickerPosx = GetRBPosition();
+    vector2x inputDiffx = strickerPosx - this->inputCurrentPos;
+    vector2x inputCurrentToPrevDiffx =  this->inputPrevPos - this->inputCurrentPos;
+    this->inputPrevPos = this->inputCurrentPos;
+    auto inputDiff_magx = inputDiffx.lengthx();
+    auto scaled_inner_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_INNER_RADIUS_SCALE));
     
     if (!this->IsGrabed()) {
         this->moveToolSprite.setRotation(this->moveToolRotation);
@@ -455,10 +581,9 @@ void Stricker::UpdateStricker3(intx fixedDT) {
             directionSprite.setPos(XTOF(strickerPosx.x), XTOF(strickerPosx.y));
         }
     }
-
 }
 
-void Stricker::UpdateStricker2(intx fixedDT) {
+void Stricker::UpdateStricker1(intx fixedDT) {
     float rotationSpeed = 60.0f;
     this->moveToolRotation += (rotationSpeed*XTOF(fixedDT));
     if (this->moveToolRotation>=360.0f) {
@@ -508,13 +633,16 @@ void Stricker::UpdateStricker2(intx fixedDT) {
 void Stricker::UpdateStricker(intx fixedDT) {
     switch (this->inputOption) {
         case OPTION1:
-            UpdateStricker2(fixedDT);
+            UpdateStricker1(fixedDT);
             break;
         case OPTION2:
+            UpdateStricker2(fixedDT);
+            break;
+        case OPTION3:
             UpdateStricker3(fixedDT);
             break;
         default:
-            UpdateStricker3(fixedDT);
+            UpdateStricker2(fixedDT);
             break;
     }
 #if OLD_METHOD_NOT_OPTIMISED
@@ -622,8 +750,16 @@ void Stricker::Cmd_TryGrab(const vector2x& pos) {
         this->SetGrabed(true);
         this->inputIsMove = true;
     } else if (!this->IsGrabed()) {
-        this->SetGrabed(true);
-        this->inputIsAim  = true;
+        if (this->inputOption == OPTION3) {
+            auto scaled_outer_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_OUTER_RADIUS_SCALE));
+            if (inputDiff_magx > scaled_inner_radiusx && inputDiff_magx < scaled_outer_radiusx) {
+                this->SetGrabed(true);
+                this->inputIsAim  = true;
+            }
+        } else {
+            this->SetGrabed(true);
+            this->inputIsAim  = true;
+        }
     }
 }
 
@@ -668,6 +804,13 @@ void Stricker::ApplyBoost() {
     
     vector2x diffStartToCurrent = strickerPos - this->inputCurrentPos;
     auto diff_mag = diffStartToCurrent.lengthx();
+    if (this->inputOption == OPTION3) {
+        auto scaled_inner_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_INNER_RADIUS_SCALE));
+        diff_mag-=scaled_inner_radiusx;
+        if (diff_mag<0) {
+            diff_mag=0;
+        }
+    }
     diffStartToCurrent.normalizex();
     
     // 130 is the top power

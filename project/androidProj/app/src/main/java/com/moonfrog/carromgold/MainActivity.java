@@ -21,7 +21,7 @@ public class MainActivity extends NativeActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             File[] files = getExternalFilesDirs(null);
             for (int x=0;x<files.length;x++) {
-                Log.d("gdcphysics :", files[x].getAbsolutePath());
+                System.out.println("carromgold : writablepath - " + files[x].getAbsolutePath());
             }
 
             AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);

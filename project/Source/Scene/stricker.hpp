@@ -16,12 +16,18 @@
 #include <functional>
 
 #define STRICKER_GRAB_INNER_RADIUS_SCALE  3.0f
-#define STRICKER_GRAB_OUTER_RADIUS_SCALE  3.0f
+#define STRICKER_GRAB_OUTER_RADIUS_SCALE  5.0f
 // AIM CONE
 #define AIMCONE_ANGLE    180
 #define AIMCONE_ANGLE_DELTA    10
 #define CONE_VERT_ARRAY_SZ ((AIMCONE_ANGLE/AIMCONE_ANGLE_DELTA)*2 + 2)*2
 #define CONE_COLOR_ARRAY_SZ ((AIMCONE_ANGLE/AIMCONE_ANGLE_DELTA)*2 + 2)*4
+
+// AIM RING
+#define AIMCONE_RING_ANGLE    180
+#define AIMCONE_RING_ANGLE_DELTA    10
+#define AIMCONE_RING_VERT_ARRAY_SZ ((AIMCONE_RING_ANGLE/AIMCONE_RING_ANGLE_DELTA)*4 + 2)*2
+#define AIMCONE_RING_COLOR_ARRAY_SZ ((AIMCONE_RING_ANGLE/AIMCONE_RING_ANGLE_DELTA)*4 + 2)*4
 
 //GRAB CIRCLE
 #define GRAB_CIRCLE_ANGLE    180
@@ -39,6 +45,7 @@ public:
     enum STRICKER_INPUT_METHOD {
         OPTION1,
         OPTION2,
+        OPTION3,
         OPTION_MAX
     };
     
@@ -54,6 +61,7 @@ public:
     void DrawPostHelperSprites(const matrix4x4f& viewProjection);
     
     void DrawAimCone(const matrix4x4f& viewProjection);
+    void DrawAimRing(const matrix4x4f& viewProjection);
     void DrawGrabCircle(const matrix4x4f& viewProjection);
     void DrawPowerCircle(const matrix4x4f& viewProjection);
     
@@ -67,6 +75,7 @@ public:
     void SetStrickerInputOption(STRICKER_INPUT_METHOD option) { this->inputOption = option; }
     
 protected:
+    void UpdateStricker1(intx fixedDT);
     void UpdateStricker2(intx fixedDT);
     void UpdateStricker3(intx fixedDT);
     
@@ -88,6 +97,8 @@ protected:
     Sprite2Dx directionSprite;
     Sprite2Dx moveToolSprite;
     
+    steTexturePacket* ringTexture;
+    
     float moveToolRotation;
     bool inputIsAim;
     bool inputIsMove;
@@ -104,6 +115,10 @@ protected:
     float aimConeVertexBuffer[CONE_VERT_ARRAY_SZ];
     float aimConeColorBuffer[CONE_COLOR_ARRAY_SZ];
     float aimConeLineColorBuffer[CONE_COLOR_ARRAY_SZ];
+    
+    // Aim ring
+    float aimRingVertexBuffer[AIMCONE_RING_VERT_ARRAY_SZ];
+    float aimRingColorBuffer[AIMCONE_RING_COLOR_ARRAY_SZ];
     
     // Grab circle
     float grabCircleVertexBuffer[GRAB_CIRCLE_VERT_ARRAY_SZ];

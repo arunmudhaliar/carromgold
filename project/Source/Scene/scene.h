@@ -104,6 +104,7 @@ private:
     
     gxButton debugButton1;
     gxButton debugButton2;
+    gxButton debugButton3;
     
     std::vector<gxButton*> debugBtnList;
 };
