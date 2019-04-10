@@ -34,6 +34,12 @@ public:
         GAME_STATE_MAX
     };
     
+    enum PLAYER_TURN {
+        TURN_PLAYER,
+        TURN_OPPONENT,
+        TURN_MAX
+    };
+    
     Board();
     ~Board();
     
@@ -46,12 +52,16 @@ public:
     void MouseBtnDown(const vector2x& pos);
     void MouseMove(const vector2x& pos);
     
-    Stricker& GetStricker() { return this->stricker; }
+    Stricker& GetPlayerStricker() { return this->playerStricker; }
+    Stricker& GetOpponentStricker() { return this->opponentStricker; }
     GAME_STATE GetBoardState() { return this-> gameState; }
     PLAYER_TYPE GetPlayerType() { return this->playerType; }
     void SetPlayerType(PLAYER_TYPE type) { this->playerType = type; }
     
     void TryStartGame();
+    inline bool IsMyTurn() { return this->gameTurn==TURN_PLAYER; }
+    void TryTurnPlayer(bool force = false);
+    void TryTurnOpponent(bool force = false);
     
 protected:
     
@@ -69,13 +79,19 @@ protected:
     void OnGameReset();
     void OnFixedUpdate(intx fixedDT) override;
     
+    // GamePlay observers
+    void OnPlayerTurn();
+    void OnOpponentTurn();
+    
     PLAYER_TYPE playerType;
+    PLAYER_TURN gameTurn;
     
     matrix4x4f boardMatrix;
     matrix4x4f boardMatrixInv;
     Solver physicsSolver;
     GAME_STATE gameState;
-    Stricker stricker;
+    Stricker playerStricker;
+    Stricker opponentStricker;
     std::map<int, Ball*> coins;
     intx elapsedTimeSinceFire;
     

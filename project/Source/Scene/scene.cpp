@@ -82,14 +82,14 @@ void Scene::InitScene(float cx, float cy) {
     float btn_width = 200.0f;
     float btn_height = 80.0f;
     debugButton1.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test1", [this](){
-        this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION1);
+        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION1);
     });
     //debugButton2
     debugButton2.initButton(worldScale*vector2f(cx*0.48f-btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test2", [this](){
-        this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION2);
+        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION2);
     });
     debugButton3.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.45f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "test3", [this](){
-        this->board.GetStricker().SetStrickerInputOption(Stricker::OPTION3);
+        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION3);
     });
     
     debugBtnList.push_back(&debugButton1);
@@ -210,6 +210,10 @@ void Scene::DrawStats() {
 //    }
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("ELAPSED %lu ms", this->physicsSolver.GetElapsedTime()).c_str(), 45, -(60+(iterator++)*20), 200);
     geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), 20, yOffset + ++iterator*20, 200);
+    
+    geFontManager::g_pFontArial10_84Ptr->drawString(this->board.IsMyTurn()?"YOUR TURN":"OPPONENTS TURN", windowSize.x*0.5f, yOffset + iterator*20, 200, true);
+    
+    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("FPS : %3.2f", Timer::getFPS()).c_str(), 20, windowSize.y*0.94f, 200);
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("BALL VEL : %d", XTOI(this->ball.GetRBVelocity().lengthx())).c_str(), 45, -(60+(iterator++)*20), 200);
 
 //        geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 1: %s", player1Score.c_str()).c_str(), 0, 0, 200);
