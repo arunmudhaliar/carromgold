@@ -40,6 +40,17 @@
 #define POWER_CIRCLE_VERT_ARRAY_SZ ((POWER_CIRCLE_ANGLE/POWER_CIRCLE_ANGLE_DELTA)*2 + 2)*2
 #define POWER_CIRCLE_COLOR_ARRAY_SZ ((POWER_CIRCLE_ANGLE/POWER_CIRCLE_ANGLE_DELTA)*2 + 2)*4
 
+class Stricker;
+class MStrickerObserver {
+public:
+    virtual void OnStricker_StateChangeTo_Grab(Stricker*) = 0;
+    virtual void OnStricker_StateChangeTo_Aim(Stricker*) = 0;
+    virtual void OnStricker_StateChangeTo_Move(Stricker*) = 0;
+    virtual void OnStricker_StateChangeTo_Shoot(Stricker*) = 0;
+    virtual void OnStricker_Move(Stricker*) = 0;
+    virtual void OnStricker_Aim(Stricker*) = 0;
+};
+
 class Stricker : public Ball {
 public:
     enum STRICKER_INPUT_METHOD {
@@ -69,7 +80,7 @@ public:
     
     void Cmd_PlaceStricker();
     void Cmd_TryGrab(const vector2x& pos);
-    void Cmd_TryFire(const vector2x& pos, std::function<void()> callback);
+    void Cmd_TryShoot(const vector2x& pos, std::function<void()> callback);
     void Cmd_TryMove(const vector2x& pos);
     
     void SetStrickerInputOption(STRICKER_INPUT_METHOD option) { this->inputOption = option; }
@@ -86,9 +97,12 @@ protected:
     void OnStartedMoving() override;
     void OnCameToHalt() override;
     
-    void SetGrabed(bool flag) { this->grabed = flag; }
+    void SetGrabed(bool flag);
+    void SetAimMode(bool flag);
+    void SetMoveMode(bool flag);
+    
     void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);
-    void ApplyBoost();
+    void Cmd_TryShoot();
     
     void SetMoveArrowPositions(const vector2x& pos);
     bool grabed;
@@ -113,6 +127,7 @@ protected:
     vector2x inputPrevPos;
     vector2x inputStartPos;
     
+    MStrickerObserver* observer;
     // Aim cone
     float aimConeVertexBuffer[CONE_VERT_ARRAY_SZ];
     float aimConeColorBuffer[CONE_COLOR_ARRAY_SZ];

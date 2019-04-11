@@ -11,11 +11,12 @@
 
 Stricker::Stricker() : Ball() {
     this->SetGrabed(false);
-    this->inputIsAim = false;
-    this->inputIsMove = false;
+    this->SetAimMode(false);
+    this->SetMoveMode(false);
     this->moveToolRotation = 0.0f;
     this->powerScale = 1.0f;
     this->breakShot = true;
+    this->observer = nullptr;
     SetStrickerInputOption(OPTION3);
     // Aim Cone
     memset(this->aimConeVertexBuffer, 0 , sizeof(this->aimConeVertexBuffer));
@@ -550,8 +551,8 @@ void Stricker::UpdateStricker3(intx fixedDT) {
         this->SetMoveArrowPositions(updatedStrickerPos);
     } else if (this->IsGrabed() && this->inputIsAim) {
         if (inputDiff_magx <  scaled_inner_radiusx) {
-            this->inputIsMove = true;
-            this->inputIsAim = false;
+            this->SetMoveMode(true);
+            this->SetAimMode(false);
         } else {
             // just aim
             vector2f diff = vector2f(XTOF(inputDiffx.x), XTOF(inputDiffx.y));
@@ -588,8 +589,8 @@ void Stricker::UpdateStricker2(intx fixedDT) {
     const intx speedToMoveUnderGrabPosx = FTOX(24.0f);
     if (this->IsGrabed() && this->inputIsMove) {
         if (inputDiff_magx >  scaled_inner_radiusx) {
-            this->inputIsMove = false;
-            this->inputIsAim = true;
+            this->SetMoveMode(false);
+            this->SetAimMode(true);
             // calculate the direction and set for the sprite
             vector2f diff = vector2f(XTOF(inputDiffx.x), XTOF(inputDiffx.y));
             float angle = RAD2DEG(atan2(-diff.x, diff.y));
@@ -610,8 +611,8 @@ void Stricker::UpdateStricker2(intx fixedDT) {
         }
     } else if (this->IsGrabed() && this->inputIsAim) {
         if (inputDiff_magx <  scaled_inner_radiusx) {
-            this->inputIsMove = true;
-            this->inputIsAim = false;
+            this->SetMoveMode(true);
+            this->SetAimMode(false);
         } else {
             // just aim
             vector2f diff = vector2f(XTOF(inputDiffx.x), XTOF(inputDiffx.y));
@@ -657,8 +658,8 @@ void Stricker::UpdateStricker1(intx fixedDT) {
         this->moveToolSprite.setPos(XTOF(updatedStrickerPos.x), XTOF(updatedStrickerPos.y));
     } else if (this->IsGrabed() && this->inputIsAim) {
         if (inputDiff_magx <  scaled_inner_radiusx) {
-            this->inputIsMove = true;
-            this->inputIsAim = false;
+            this->SetMoveMode(true);
+            this->SetAimMode(false);
         } else {
             // just aim
             vector2f diff = vector2f(XTOF(inputDiffx.x), XTOF(inputDiffx.y));
@@ -721,8 +722,8 @@ void Stricker::UpdateStricker(intx fixedDT) {
                 // just move
                 vector2x inputDeltax = inputCurrentToPrevDiffx;
                 inputDeltax.y=0;
-                this->inputIsAim = false;
-                this->inputIsMove = false;
+                this->SetAimMode(false);
+                this->SetMoveMode(false);
                 auto toMove = inputDeltax*MULTX(fixedDT, speedToMoveUnderGrabPosx);
                 MoveStricker(fixedDT, *this, inputDeltax);
                 auto updatedStrickerPos = this->GetRBPosition();
@@ -740,12 +741,12 @@ void Stricker::UpdateStricker(intx fixedDT) {
                     directionSprite.setRotation(angle);
                     
                     directionSprite.setPos(XTOF(strickerPosx.x), XTOF(strickerPosx.y));
-                    this->inputIsAim = true;
+                    this->SetAimMode(true);
                 } else if (this->inputIsMove) {
                     // just move
                     vector2x inputDeltax = inputDiffx;
                     inputDeltax.y=0;
-                    this->inputIsAim = false;
+                    this->SetAimMode(false);
                     
                     auto toMove = inputDeltax*MULTX(fixedDT, speedToMoveUnderGrabPosx);
                     MoveStricker(fixedDT, *this, toMove);
@@ -753,13 +754,13 @@ void Stricker::UpdateStricker(intx fixedDT) {
                     this->moveToolSprite.setPos(XTOF(updatedStrickerPos.x), XTOF(updatedStrickerPos.y));
                 } else {
                     if (ABS(angle)>AIMCONE_ANGLE) {
-                        this->inputIsMove = true;
-                        this->inputIsAim = false;
+                        this->SetMoveMode(true);
+                        this->SetAimMode(false);
                         // set the position for the sprite
                         this->moveToolSprite.setPos(XTOF(strickerPosx.x), XTOF(strickerPosx.y));
                     } else {
-                        this->inputIsMove = false;
-                        this->inputIsAim = true;
+                        this->SetMoveMode(false);
+                        this->SetAimMode(true);
                         // calculate the direction and set for the sprite
                         float scale = diff.Length()/directionSprite.getClipHeight();
                         directionSprite.setTile(1.0f, scale);
@@ -774,9 +775,33 @@ void Stricker::UpdateStricker(intx fixedDT) {
 #endif
 }
 
+void Stricker::SetGrabed(bool flag) {
+    auto oldValue = this->grabed;
+    this->grabed = flag;
+    if (this->grabed && !oldValue && observer) {
+        observer->OnStricker_StateChangeTo_Grab(this);
+    }
+}
+
+void Stricker::SetAimMode(bool flag) {
+    auto oldValue = this->inputIsAim;
+    this->inputIsAim = flag;
+    if (this->inputIsAim && !oldValue && observer) {
+        observer->OnStricker_StateChangeTo_Aim(this);
+    }
+}
+
+void Stricker::SetMoveMode(bool flag) {
+    auto oldValue = this->inputIsMove;
+    this->inputIsMove = flag;
+    if (this->inputIsMove && !oldValue && observer) {
+        observer->OnStricker_StateChangeTo_Move(this);
+    }
+}
+
 void Stricker::Cmd_PlaceStricker() {
-    this->inputIsAim = false;
-    this->inputIsMove = false;
+    this->SetAimMode(false);
+    this->SetMoveMode(false);
     this->powerScale = 1.0f;
     this->SetGrabed(false);
     auto strickerPos = this->GetRBPosition();
@@ -795,33 +820,33 @@ void Stricker::Cmd_TryGrab(const vector2x& pos) {
     auto scaled_inner_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_INNER_RADIUS_SCALE));
     if (!this->IsGrabed() && inputDiff_magx <  scaled_inner_radiusx) {
         this->SetGrabed(true);
-        this->inputIsMove = true;
+        this->SetMoveMode(true);
     } else if (!this->IsGrabed()) {
         if (this->inputOption == OPTION3) {
             auto scaled_outer_radiusx = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_OUTER_RADIUS_SCALE));
             if (inputDiff_magx > scaled_inner_radiusx && inputDiff_magx < scaled_outer_radiusx) {
                 this->SetGrabed(true);
-                this->inputIsAim  = true;
+                this->SetAimMode(true);
             }
         } else {
             this->SetGrabed(true);
-            this->inputIsAim  = true;
+            this->SetAimMode(true);
         }
     }
 }
 
-void Stricker::Cmd_TryFire(const vector2x& pos, std::function<void()> callback) {
+void Stricker::Cmd_TryShoot(const vector2x& pos, std::function<void()> callback) {
     this->inputCurrentPos = pos;
     
     if (this->inputIsAim) {
-        this->ApplyBoost();
+        this->Cmd_TryShoot();
         callback();
         
     }
     
     this->SetGrabed(false);
-    this->inputIsAim = false;
-    this->inputIsMove = false;
+    this->SetAimMode(false);
+    this->SetMoveMode(false);
 }
 
 void Stricker::Cmd_TryMove(const vector2x& pos) {
@@ -845,7 +870,7 @@ void Stricker::MoveStricker(intx fixedDT, Ball& ball, vector2x& delta) {
     ball.SetRBPosition(position);
 }
 
-void Stricker::ApplyBoost() {
+void Stricker::Cmd_TryShoot() {
     auto vel = GetRBVelocity();
     auto strickerPos = GetRBPosition();
     
@@ -872,5 +897,8 @@ void Stricker::ApplyBoost() {
     //    DEBUG_PRINT("scaled_diff %d", XTOI(scaled_diff));
     //    scaled_diff = FTOX(40000);
     AddForce(diffStartToCurrent*scaled_diff);
+    if (observer) {
+        observer->OnStricker_StateChangeTo_Shoot(this);
+    }
 }
 

@@ -65,7 +65,6 @@ public:
     
 protected:
     
-    void ApplyBoost(int mx, int my);
     void SetGameState(GAME_STATE state);
     void ResetCoins();
     void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);

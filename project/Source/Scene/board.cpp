@@ -379,7 +379,7 @@ void Board::MouseBtnUp(const vector2x& pos) {
     }
     
     auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
-    this->playerStricker.Cmd_TryFire(transformedPos, [this](){
+    this->playerStricker.Cmd_TryShoot(transformedPos, [this](){
         this->SetGameState(GAME_PLAYER_FIRE);
     });
 }
