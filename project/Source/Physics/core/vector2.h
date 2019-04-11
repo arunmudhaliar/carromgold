@@ -34,8 +34,8 @@ public:
 	
 	vector2<T> operator-()					{	return vector2<T>(-x, -y);	}
 	
-	vector2<T> operator+(const vector2<T>& v)	{	return vector2<T>(x+v.x, y+v.y);	}
-	vector2<T> operator-(const vector2<T>& v)	{	return vector2<T>(x-v.x, y-v.y);	}
+	vector2<T> operator+(const vector2<T>& v) const	{	return vector2<T>(x+v.x, y+v.y);	}
+	vector2<T> operator-(const vector2<T>& v) const	{	return vector2<T>(x-v.x, y-v.y);	}
 	
     void operator+=(const vector2<T>& v) 	{	x+=v.x; y+=v.y;	}
 	void operator-=(const vector2<T>& v)	{	x-=v.x; y-=v.y;	}

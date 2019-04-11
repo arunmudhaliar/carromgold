@@ -15,8 +15,8 @@
 
 #include <functional>
 
-#define STRICKER_GRAB_INNER_RADIUS_SCALE  3.0f
-#define STRICKER_GRAB_OUTER_RADIUS_SCALE  5.0f
+#define STRICKER_GRAB_INNER_RADIUS_SCALE  1.5f
+#define STRICKER_GRAB_OUTER_RADIUS_SCALE  3.5f
 // AIM CONE
 #define AIMCONE_ANGLE    180
 #define AIMCONE_ANGLE_DELTA    10
@@ -90,12 +90,14 @@ protected:
     void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);
     void ApplyBoost();
     
+    void SetMoveArrowPositions(const vector2x& pos);
     bool grabed;
     
     // vars
     Sprite2Dx strickerSprite;
     Sprite2Dx directionSprite;
     Sprite2Dx moveToolSprite;
+    Sprite2Dx moveArrows[4];
     
     steTexturePacket* ringTexture;
     

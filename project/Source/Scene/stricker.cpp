@@ -50,7 +50,26 @@ void Stricker::InitStricker(float size, float mass, float frictionfactor, const 
     this->moveToolSprite.setOffset(0, 0);
     this->moveToolSprite.loadTexture(&textureManager, cpp_getPath("/res/sprites/MoveTool.png").c_str());
     
-    
+    this->moveArrows[0].setOffset(0, 0);
+    this->moveArrows[0].loadTexture(&textureManager, cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[0].setScale(1.15f, 1.15f);
+    this->moveArrows[1].setOffset(0, 0);
+    this->moveArrows[1].loadTexture(&textureManager, cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[1].setScale(0.75f, 0.75f);
+    this->moveArrows[1].setAlpha(0.5f);
+    this->moveArrows[2].setOffset(0, 0);
+    this->moveArrows[2].loadTexture(&textureManager, cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[2].setScale(1.15f, 1.15f);
+    this->moveArrows[2].setRotation(180);
+    this->moveArrows[3].setOffset(0, 0);
+    this->moveArrows[3].loadTexture(&textureManager, cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[3].setRotation(180);
+    this->moveArrows[3].setScale(0.75f, 0.75f);
+    this->moveArrows[3].setAlpha(0.5f);
+
+    if (this->inputOption==OPTION3) {
+        this->moveToolSprite.setScale(1.2f, 1.2f);
+    }
     this->initBall(size, mass, frictionfactor, pos, &this->strickerSprite, soundEnginePtr);
     this->SetColor(0.5f, 0.58f, 0.4f);
     this->SetTag("Stricker");
@@ -260,7 +279,24 @@ void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
     if (this->inputIsAim) {
         this->directionSprite.draw(shader, viewProjection);
     } else {
-        this->moveToolSprite.draw(shader, viewProjection);
+        if (this->inputOption==OPTION3) {
+            if (!this->IsGrabed()) {
+                this->moveToolSprite.draw(shader, viewProjection);
+            }
+        } else {
+            this->moveToolSprite.draw(shader, viewProjection);
+        }
+    }
+    
+    if (this->inputOption==OPTION3) {
+        if (!this->IsGrabed() || this->inputIsMove) {
+            for(int x=0;x<4;x++) {
+                if (x%2==1) {
+                    continue;
+                }
+                this->moveArrows[x].draw(shader, viewProjection);
+            }
+        }
     }
     shader->disableProgram();
     
@@ -270,13 +306,13 @@ void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
         this->DrawPowerCircle(viewProjection);
         this->DrawGrabCircle(viewProjection);
     } else if (this->inputIsMove){
-        if (this->inputOption == OPTION3) {
-            this->DrawAimRing(viewProjection);
-        }
+//        if (this->inputOption == OPTION3) {
+//            this->DrawAimRing(viewProjection);
+//        }
     } else {
-        if (this->inputOption == OPTION3) {
-            this->DrawAimRing(viewProjection);
-        }
+//        if (this->inputOption == OPTION3) {
+//            this->DrawAimRing(viewProjection);
+//        }
 //        this->DrawGrabCircle(viewProjection);
 //        this->DrawAimCone(viewProjection);
     }
@@ -475,6 +511,15 @@ void Stricker::DrawPowerCircle(const matrix4x4f& viewProjection) {
 #endif
 }
 
+void Stricker::SetMoveArrowPositions(const vector2x& pos) {
+    auto radiusInner = MULTX(this->GetRadius(), FTOX(1.35f));
+    auto radiusOuter = MULTX(this->GetRadius(), FTOX(1.75f));
+    moveArrows[0].setPositionx(pos-vector2x(radiusInner, 0));
+    moveArrows[1].setPositionx(pos-vector2x(radiusOuter, 0));
+    moveArrows[2].setPositionx(pos+vector2x(radiusInner, 0));
+    moveArrows[3].setPositionx(pos+vector2x(radiusOuter, 0));
+}
+
 void Stricker::UpdateStricker3(intx fixedDT) {
     float rotationSpeed = 60.0f;
     this->moveToolRotation += (rotationSpeed*XTOF(fixedDT));
@@ -502,6 +547,7 @@ void Stricker::UpdateStricker3(intx fixedDT) {
         MoveStricker(fixedDT, *this, inputDeltax);
         auto updatedStrickerPos = this->GetRBPosition();
         this->moveToolSprite.setPos(XTOF(updatedStrickerPos.x), XTOF(updatedStrickerPos.y));
+        this->SetMoveArrowPositions(updatedStrickerPos);
     } else if (this->IsGrabed() && this->inputIsAim) {
         if (inputDiff_magx <  scaled_inner_radiusx) {
             this->inputIsMove = true;
@@ -735,6 +781,7 @@ void Stricker::Cmd_PlaceStricker() {
     this->SetGrabed(false);
     auto strickerPos = this->GetRBPosition();
     this->moveToolSprite.setPos(XTOF(strickerPos.x), XTOF(strickerPos.y));
+    this->SetMoveArrowPositions(strickerPos);
 }
 
 void Stricker::Cmd_TryGrab(const vector2x& pos) {

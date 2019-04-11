@@ -26,6 +26,8 @@
 #include <SDL2/SDL.h>
 #endif
 
+#define SHOW_DEBUG_PANEL 0
+
 class Scene
 #if ENABLE_MULTIPLAYER
 : protected NetworkManagerDelegate

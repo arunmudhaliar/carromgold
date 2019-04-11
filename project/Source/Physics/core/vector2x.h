@@ -27,7 +27,7 @@ public:
 	void operator=(const vector2x& v)	{	x=v.x; y=v.y;	}
     bool operator==(const vector2x& v)	{	return (x==v.x && y==v.y);	}
 	vector2x operator-()				{	return vector2x(-x, -y);	}
-	vector2x operator+(const vector2x& v) 	{	return vector2x(x+v.x, y+v.y);	}
+	vector2x operator+(const vector2x& v) const	{	return vector2x(x+v.x, y+v.y);	}
 	vector2x operator-(const vector2x& v) const	{	return vector2x(x-v.x, y-v.y);	}
 	void operator+=(const vector2x& v) 	{	x+=v.x; y+=v.y;	}
 	void operator-=(const vector2x& v)	{	x-=v.x; y-=v.y;	}

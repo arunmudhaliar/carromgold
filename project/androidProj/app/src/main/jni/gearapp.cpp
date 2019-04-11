@@ -1,5 +1,7 @@
 #include <jni.h>
 #include <android/log.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 #define  LOG_TAG    "gearApp-native"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -18,54 +20,51 @@
 #include "../../../../../Source/Scene/scene.h"
 
 /**
- * Our saved state data.
- */
-struct saved_state {
-    float angle;
-    int32_t x;
-    int32_t y;
-};
-
-/**
  * Shared state for our app.
  */
 struct engine {
     struct android_app* app;
+    AAssetManager* assetManager;
 
-    ASensorManager* sensorManager;
-    const ASensor* accelerometerSensor;
-    ASensorEventQueue* sensorEventQueue;
-
-    int animating;
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
     int32_t width;
     int32_t height;
-    struct saved_state state;
 };
+
+AAssetManager* globalAssetManager = nullptr;
 
 extern "C" {
 	jint JNI_OnLoad(JavaVM* vm, void* reserved);
-	jint Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv *, jobject);
+	jint Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv *, jobject, jobject);
 	static int gear_start_app();
 }
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-	LOGI("native JNI_OnLoad executed");
+	LOGI("carromgold : JNI_OnLoad executed");
 	return JNI_VERSION_1_6;
 }
 
-JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv *, jobject)
+JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv* env, jobject obj, jobject assetManager)
 {
-	//gear_start_app();
+    LOGI("carromgold : mainlib()\n");
+    globalAssetManager = AAssetManager_fromJava(env, assetManager);
+    if (!globalAssetManager) {
+        LOGE("carromgold : AAssetManager_fromJava() returned null.\n");
+        assert(false);
+    }
 	return 0;
 }
 
-static int gear_start_app(struct engine* engine)
-{
-    LOGI("carromgold android\n");
+static int gear_start_app(struct engine* engine) {
+    LOGI("carromgold : gear_start_app()\n");
+    engine->assetManager = globalAssetManager;
+    LOGI("carromgold : width %d, height %d", engine->width, engine->height);
+    Scene& gameScene = Scene::GetInstance();
+    gameScene.InitScene(engine->width*2, engine->height*2);
+    gameScene.Resize(engine->width*2, engine->height*2);
 	return 0;
 }
 
@@ -88,7 +87,7 @@ static int engine_init_display(struct engine* engine) {
             EGL_DEPTH_SIZE, 8,
             EGL_NONE
     };
-    EGLint w, h, dummy, format;
+    EGLint w, h, format;
     EGLint numConfigs;
     EGLConfig config;
     EGLSurface surface;
@@ -132,15 +131,6 @@ static int engine_init_display(struct engine* engine) {
     engine->surface = surface;
     engine->width = w;
     engine->height = h;
-    engine->state.angle = 0;
-
-    LOGI("carromgold : width %d, height %d", w, h);
-    Scene& gameScene = Scene::GetInstance();
-    gameScene.InitScene(w*2, h*2);
-    gameScene.Resize(w*2, h*2);
-//	//set viewport
-//	monoWrapper::mono_engine_getWorld(0)->getRenderer()->setViewPort(0, 0, w, h);
-
 
     // Initialize GL state.
     //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
@@ -157,7 +147,6 @@ static int engine_init_display(struct engine* engine) {
  */
 static void engine_draw_frame(struct engine* engine) {
     if (engine->display == NULL) {
-        // No display.
         return;
     }
 
@@ -166,21 +155,6 @@ static void engine_draw_frame(struct engine* engine) {
     gameScene.Update();
     gameScene.Render();
 
-	//monoWrapper::mono_engine_update(monoWrapper::mono_engine_getWorld(0), 1.0f);
-	//monoWrapper::mono_game_run(1.0f);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//monoWrapper::mono_engine_render(monoWrapper::mono_engine_getWorld(0), NULL, object3d::eObject3dBase_RenderFlag_NormalRenderPass);
-
-/*
-	if(g_pFontPtr)
-	{
-		glDisable(GL_CULL_FACE);
-		g_pFontPtr->setRGBA(1, 1, 1);
-		g_pFontPtr->drawString("HelloWorld", 0, g_pFontPtr->getLineHeight()+10, 200);
-		glEnable(GL_CULL_FACE);
-	}
-	*/
     eglSwapBuffers(engine->display, engine->surface);
 }
 
@@ -198,7 +172,6 @@ static void engine_term_display(struct engine* engine) {
         }
         eglTerminate(engine->display);
     }
-    engine->animating = 0;
     engine->display = EGL_NO_DISPLAY;
     engine->context = EGL_NO_CONTEXT;
     engine->surface = EGL_NO_SURFACE;
@@ -208,6 +181,11 @@ static void engine_term_display(struct engine* engine) {
  * Process the next input event.
  */
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
+    if (AKeyEvent_getKeyCode(event) == AKEYCODE_BACK) {
+        // actions on back key
+        return 0; // <-- return 1 to prevent default handler
+    };
+
     auto *engine = reinterpret_cast<struct engine*>(app->userData);
     Scene& gameScene = Scene::GetInstance();
     int action = AKeyEvent_getAction(event);
@@ -221,12 +199,9 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             break;
         }
     }
+
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-        engine->animating = 1;
-        engine->state.x = AMotionEvent_getX(event, 0);
-        engine->state.y = AMotionEvent_getY(event, 0);
         gameScene.MouseMove(AMotionEvent_getX(event, 0), AMotionEvent_getY(event, 0));
-        return 1;
     }
     return 0;
 }
@@ -239,9 +214,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
             // The system has asked us to save our current state.  Do so.
-            engine->app->savedState = malloc(sizeof(struct saved_state));
-            *((struct saved_state*)engine->app->savedState) = engine->state;
-            engine->app->savedStateSize = sizeof(struct saved_state);
             break;
         case APP_CMD_INIT_WINDOW:
             // The window is being shown, get it ready.
@@ -249,8 +221,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine_init_display(engine);
                 //ENGINE ENTRY POINT
                 gear_start_app(engine);
-                //
-                engine_draw_frame(engine);
             }
             break;
         case APP_CMD_TERM_WINDOW:
@@ -258,25 +228,10 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             engine_term_display(engine);
             break;
         case APP_CMD_GAINED_FOCUS:
-            // When our app gains focus, we start monitoring the accelerometer.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_enableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-                // We'd like to get 60 events per second (in us).
-                ASensorEventQueue_setEventRate(engine->sensorEventQueue,
-                        engine->accelerometerSensor, (1000L/60)*1000);
-            }
+            // When our app gains focus.
             break;
         case APP_CMD_LOST_FOCUS:
-            // When our app loses focus, we stop monitoring the accelerometer.
-            // This is to avoid consuming battery while not being used.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_disableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-            }
-            // Also stop animating.
-            engine->animating = 0;
-            engine_draw_frame(engine);
+            // When our app loses focus.
             break;
     }
 }
@@ -289,6 +244,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
  */
 void android_main(struct android_app* state)
 {
+    LOGI("carromgold : android_main");
     struct engine engine;
 
     // Make sure glue isn't stripped.
@@ -300,75 +256,7 @@ void android_main(struct android_app* state)
     state->onInputEvent = engine_handle_input;
     engine.app = state;
 
-    // Prepare to monitor accelerometer
-    engine.sensorManager = ASensorManager_getInstance();
-    engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager,
-            ASENSOR_TYPE_ACCELEROMETER);
-    engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
-            state->looper, LOOPER_ID_USER, NULL, NULL);
-
-    if (state->savedState != NULL) {
-        // We are starting with a previous saved state; restore from it.
-        engine.state = *(struct saved_state*)state->savedState;
-    }
-
-    // loop waiting for stuff to do.
-/*
-    while (1) {
-        // Read all pending events.
-        int ident;
-        int events;
-        struct android_poll_source* source;
-
-        // If not animating, we will block forever waiting for events.
-        // If animating, we loop until all events are read, then continue
-        // to draw the next frame of animation.
-        while ((ident=ALooper_pollAll(engine.animating ? 0 : -1, NULL, &events,
-                (void**)&source)) >= 0) {
-
-            // Process this event.
-            if (source != NULL) {
-                source->process(state, source);
-            }
-
-            // If a sensor has data, process it now.
-            if (ident == LOOPER_ID_USER) {
-                if (engine.accelerometerSensor != NULL) {
-                    ASensorEvent event;
-                    while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
-                            &event, 1) > 0) {
-                        //LOGI("accelerometer: x=%f y=%f z=%f",
-                        //        event.acceleration.x, event.acceleration.y,
-                        //        event.acceleration.z);
-                    	engine_draw_frame(&engine);
-                    }
-                }
-            }
-
-            // Check if we are exiting.
-            if (state->destroyRequested != 0) {
-                engine_term_display(&engine);
-                return;
-            }
-        }
-
-        if (engine.animating) {
-            // Done with events; draw next animation frame.
-            engine.state.angle += .01f;
-            if (engine.state.angle > 1) {
-                engine.state.angle = 0;
-            }
-
-            // Drawing is throttled to the screen update rate, so there
-            // is no need to do timing here.
-            engine_draw_frame(&engine);
-        }
-    }
-*/
-
-
     /////////
-
     int events;
     android_poll_source *pSource;
     do {
@@ -383,4 +271,6 @@ void android_main(struct android_app* state)
             engine_draw_frame(pengine);
         }
     } while (!state->destroyRequested);
+
+    LOGI("carromgold : EXITED\n");
 }

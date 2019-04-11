@@ -24,8 +24,8 @@ public:
 	
 	~vector3x(){}
 	
-	vector3x operator+(const vector3x& v)	{	return vector3x(x+v.x, y+v.y, z+v.z);	}
-	vector3x operator-(const vector3x& v)	{	return vector3x(x-v.x, y-v.y, z-v.z);	}
+	vector3x operator+(const vector3x& v) const	{	return vector3x(x+v.x, y+v.y, z+v.z);	}
+	vector3x operator-(const vector3x& v) const	{	return vector3x(x-v.x, y-v.y, z-v.z);	}
 	
 	vector3x operator*(const int n)			{	return vector3x(MULTX(x, n), MULTX(y, n), MULTX(z, n));	}
 	vector3x operator*(const float n)		{	return vector3x(MULTX(x, FTOX(n)), MULTX(y, FTOX(n)), MULTX(z, FTOX(n)));	}

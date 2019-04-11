@@ -78,6 +78,7 @@ void Scene::InitScene(float cx, float cy) {
     board.InitBoard(vector2i(cx, cy), textureManager, &this->soundEngine);
     
     
+#if SHOW_DEBUG_PANEL
     // DEBUG PANEL
     float btn_width = 200.0f;
     float btn_height = 80.0f;
@@ -95,6 +96,7 @@ void Scene::InitScene(float cx, float cy) {
     debugBtnList.push_back(&debugButton1);
     debugBtnList.push_back(&debugButton2);
     debugBtnList.push_back(&debugButton3);
+#endif
     
 #if ENABLE_MULTIPLAYER
     NetworkManager::GetInstance().InitNetwork(this);
@@ -177,11 +179,13 @@ void Scene::Render() {
     
      DrawStats();
     
+#if SHOW_DEBUG_PANEL
     // Debug panel
     for(auto b : debugBtnList) {
         b->drawButton(*renderer.getViewProjectionMatrix());
     }
     //
+#endif
     
 #if !USE_ProgrammablePipeLine
     glPopMatrix();
