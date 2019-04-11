@@ -45,7 +45,7 @@ public:
 
     ~geFont();
     void reset();
-    bool load(gxFile& file);
+    bool load(gxBufferFileReader& fileBuffer);
     void draw();
     
     int drawString(const char* str, int x, int y, int width_limit, bool bCentered=false, bool bShadowed=false, float elapsetime=0.0f);

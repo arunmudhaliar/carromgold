@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "../GUI/gxFile.h"
+#include "../GUI/gxBufferFileReader.h"
 #include "../GUI/gxDebug.h"
 
 class SoundSample
@@ -34,9 +34,9 @@ public:
     int getBufferSize()						{	return m_iSize;			}
     
 #if defined(USE_OPENAL)
-    bool loadFromFile(gxFile& file);
+    bool loadFromFile(gxBufferFileReader& bufferReader);
 #elif defined(USE_OPENSL)
-    bool loadFromFile(gxFile& file, const SLEngineItf engineEngine, const SLObjectItf outputMixObject);
+    bool loadFromFile(gxBufferFileReader& bufferReader, const SLEngineItf engineEngine, const SLObjectItf outputMixObject);
 
     SLObjectItf getPlayerObject()			{	return m_pPlayer;		}
     SLPlayItf getPlayInterface()			{	return m_pPlayerPlay;	}

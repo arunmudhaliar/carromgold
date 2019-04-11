@@ -8,5 +8,14 @@
 
 #include <string>
 
-const char* cpp_getCurrentWorkingDirectory();
-std::string cpp_getPath(const std::string& path);
+namespace OSUtils {
+#if ANDROID
+    static std::string writablePath;
+    void cpp_setWritablePath(const std::string& path);
+    const std::string& cpp_getWritablePath();
+#endif
+    const std::string cpp_getCurrentWorkingDirectory();
+    std::string cpp_getPath(const std::string& path);
+}
+
+

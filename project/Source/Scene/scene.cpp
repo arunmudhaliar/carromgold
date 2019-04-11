@@ -69,7 +69,7 @@ void Scene::InitScene(float cx, float cy) {
 
     soundEngine.init();
     for (auto sfx : sfxSounds) {
-        auto sfxSrc = soundEngine.load(cpp_getPath(sfx.filename));
+        auto sfxSrc = soundEngine.load(OSUtils::cpp_getPath(sfx.filename));
         if (!sfxSrc) {
             DEBUG_PRINT("SFX load error - %s", sfx.filename.c_str());
         }

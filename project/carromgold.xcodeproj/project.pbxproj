@@ -58,6 +58,7 @@
 		55CC15712187B33A00236749 /* types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55CC156B2187B33A00236749 /* types.cpp */; };
 		55CC15762187B4C700236749 /* rigidBody.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55CC15752187B4C700236749 /* rigidBody.cpp */; };
 		55CFC16C225BD0190001E7E2 /* gxButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55CFC16A225BD0190001E7E2 /* gxButton.cpp */; };
+		55CFC183225F9F980001E7E2 /* gxBufferFileReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55CFC181225F9F980001E7E2 /* gxBufferFileReader.cpp */; };
 		55D2A8572187A00700D32E4D /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 55D2A8562187A00700D32E4D /* AppDelegate.mm */; };
 		55D2A8592187A00800D32E4D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55D2A8582187A00800D32E4D /* Assets.xcassets */; };
 		55D2A85C2187A00800D32E4D /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 55D2A85A2187A00800D32E4D /* MainMenu.xib */; };
@@ -228,6 +229,8 @@
 		55CC15832188D2E500236749 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		55CFC16A225BD0190001E7E2 /* gxButton.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = gxButton.cpp; sourceTree = "<group>"; };
 		55CFC16B225BD0190001E7E2 /* gxButton.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = gxButton.hpp; sourceTree = "<group>"; };
+		55CFC181225F9F980001E7E2 /* gxBufferFileReader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gxBufferFileReader.cpp; sourceTree = "<group>"; };
+		55CFC182225F9F980001E7E2 /* gxBufferFileReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gxBufferFileReader.h; sourceTree = "<group>"; };
 		55D2A8522187A00700D32E4D /* carromgold.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = carromgold.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		55D2A8552187A00700D32E4D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		55D2A8562187A00700D32E4D /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
@@ -448,6 +451,8 @@
 				5558C2C62222E13B00A686E6 /* Sprite */,
 				5545E6CA218DC85A003641E1 /* gxFile.cpp */,
 				5545E6CB218DC85A003641E1 /* gxFile.h */,
+				55CFC181225F9F980001E7E2 /* gxBufferFileReader.cpp */,
+				55CFC182225F9F980001E7E2 /* gxBufferFileReader.h */,
 				5545E6C7218DC809003641E1 /* geFontManager.h */,
 				5545E6C8218DC809003641E1 /* geFontManager.cpp */,
 				5545E6DE218DE364003641E1 /* OSUtils.h */,
@@ -1074,6 +1079,7 @@
 				5517965222529EBA00EB638C /* adler32.c in Sources */,
 				5558C2D52222E13B00A686E6 /* Sprite2Dx.cpp in Sources */,
 				5517962A22529EB000EB638C /* pngread.c in Sources */,
+				55CFC183225F9F980001E7E2 /* gxBufferFileReader.cpp in Sources */,
 				5545E6E4218E166B003641E1 /* scene.cpp in Sources */,
 				5517962622529EB000EB638C /* pngwutil.c in Sources */,
 				55DF03362188DE47004307F7 /* appEntry.cpp in Sources */,

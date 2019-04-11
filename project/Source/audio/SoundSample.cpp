@@ -50,21 +50,22 @@ SoundSample::~SoundSample()
 
 #if defined(USE_OPENAL) || defined(USE_OPENSL)
 #if defined(USE_OPENAL)
-bool SoundSample::loadFromFile(gxFile& file)
+bool SoundSample::loadFromFile(gxBufferFileReader& bufferReader)
 #elif defined(USE_OPENSL)
-bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, const SLObjectItf outputMixObject)
+bool SoundSample::loadFromFile(gxBufferFileReader& bufferReader, const SLEngineItf engineEngine, const SLObjectItf outputMixObject)
 #endif
 {    
     int signature;
-    file.Read(signature);
-    file.Read(m_iFormat);
-    file.Read(m_iFrequency);
-    file.Read(m_iSize);             //uncompressed size
+    bufferReader.Rewind();
+    bufferReader.Read(signature);
+    bufferReader.Read(m_iFormat);
+    bufferReader.Read(m_iFrequency);
+    bufferReader.Read(m_iSize);             //uncompressed size
     uint32_t compressedSz=0;
-    file.Read(compressedSz);        //compressed size
+    bufferReader.Read(compressedSz);        //compressed size
     
     unsigned char* compressed_buffer=(unsigned char*)malloc(compressedSz);
-    file.ReadBuffer(compressed_buffer, compressedSz);
+    bufferReader.ReadBuffer(compressed_buffer, compressedSz);
     
     unsigned char* outData = (unsigned char*)malloc(m_iSize);
     unsigned long uncompressed_sz=m_iSize;

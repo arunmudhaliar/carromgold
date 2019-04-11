@@ -28,6 +28,7 @@ LOCAL_SRC_FILES := gearapp.cpp  \
                     ../../../../../Source/GUI/geFontManager.cpp \
                     ../../../../../Source/GUI/gxDebug.cpp \
                     ../../../../../Source/GUI/gxFile.cpp \
+                    ../../../../../Source/GUI/gxBufferFileReader.cpp \
                     ../../../../../Source/GUI/OSUtils.cpp \
                     ../../../../../Source/GUI/gxButton.cpp \
                     ../../../../../Source/audio/SoundSample.cpp \

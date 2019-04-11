@@ -9,24 +9,15 @@
 #import <Foundation/Foundation.h>
 #include "OSUtils.h"
 
-//+(const char*) getCurrentWorkingDirectory:(id)sender
-//{
-//    NSString *appPath = [[NSBundle mainBundle] bundlePath];
-//    const char* cString = [appPath cStringUsingEncoding:NSASCIIStringEncoding];
-//    
-//    return cString;
-//}
-
-const char* cpp_getCurrentWorkingDirectory()
-{
-//    return [OSSpecificImpl getCurrentWorkingDirectory:nullptr];
+namespace OSUtils {
+const std::string cpp_getCurrentWorkingDirectory() {
     NSString *appPath = [[NSBundle mainBundle] bundlePath];
     const char* cString = [appPath cStringUsingEncoding:NSASCIIStringEncoding];
-    
-    return cString;
+    return std::string((cString)?cString:"");
 }
 
 std::string cpp_getPath(const std::string& path) {
     std::string resolvedPath = "./Contents/Resources/"+path;
     return resolvedPath.c_str();
 }
+};

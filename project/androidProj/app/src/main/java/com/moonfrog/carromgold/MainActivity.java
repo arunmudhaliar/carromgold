@@ -24,18 +24,26 @@ public class MainActivity extends NativeActivity {
         super.onCreate(savedInstanceState);
         Log.i(APP_NAME, "onCreate()");
         assetManager = getAssets();
-        mainlib(assetManager);
 
+
+        String writablePath = "";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             File[] files = getExternalFilesDirs(null);
             for (int x=0;x<files.length;x++) {
                 Log.i(APP_NAME, "writablepath - " + files[x].getAbsolutePath());
+                if (x==0) {
+                    writablePath = files[x].getAbsolutePath();
+                }
             }
 
             AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             Log.i(APP_NAME, "OpenSL Sample rate - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE).toString());
             Log.i(APP_NAME, "OpenSL Sample buffer size - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER).toString());
         }
+
+        Log.i(APP_NAME, "Using writablepath - " + writablePath);
+        mainlib(assetManager, writablePath);
+
 
         setContentView(R.layout.activity_main);
         Log.i(APP_NAME, "getExternalStorageDirectory "+ Environment.getExternalStorageDirectory());
@@ -60,7 +68,7 @@ public class MainActivity extends NativeActivity {
     }
 
 
-    public static native void mainlib(AssetManager mgr);
+    public static native void mainlib(AssetManager mgr, String writablePath);
 
     static{
         System.loadLibrary("carromgold");

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "../../../../../Source/Scene/scene.h"
+#include "../../../../../Source/GUI/OSUtils.h"
 
 /**
  * Shared state for our app.
@@ -37,29 +38,58 @@ AAssetManager* globalAssetManager = nullptr;
 
 extern "C" {
 	jint JNI_OnLoad(JavaVM* vm, void* reserved);
-	jint Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv *, jobject, jobject);
+	jint Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv *, jobject, jobject, jstring writablePath);
 	static int gear_start_app();
 }
 
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
+jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	LOGI("JNI_OnLoad executed");
+	LOGI("sizeof(char) - %d", sizeof(char));
+    LOGI("sizeof(byte) - %d", sizeof(byte));
+    LOGI("sizeof(short) - %d", sizeof(short));
+    LOGI("sizeof(int) - %d", sizeof(int));
+    LOGI("sizeof(intx) - %d", sizeof(intx));
+    LOGI("sizeof(long) - %d", sizeof(long));
+    LOGI("sizeof(float) - %d", sizeof(float));
+    LOGI("sizeof(double) - %d", sizeof(double));
+
 	return JNI_VERSION_1_6;
 }
 
-JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv* env, jobject obj, jobject assetManager)
-{
-    LOGI("mainlib()\n");
+std::string jstring2string(JNIEnv *env, jstring jStr) {
+    if (!jStr)
+        return "";
+
+    const jclass stringClass = env->GetObjectClass(jStr);
+    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
+    const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
+
+    size_t length = (size_t) env->GetArrayLength(stringJbytes);
+    jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+    std::string ret = std::string((char *)pBytes, length);
+    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+
+    env->DeleteLocalRef(stringJbytes);
+    env->DeleteLocalRef(stringClass);
+    return ret;
+}
+
+JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv* env, jobject obj, jobject assetManager, jstring writablePath) {
+    LOGI("mainlib()");
+    std::string writablePathFromJava = jstring2string(env, writablePath);
+    LOGI("writablePathFromJava %s", writablePathFromJava.c_str());
+    OSUtils::cpp_setWritablePath(writablePathFromJava);
     globalAssetManager = AAssetManager_fromJava(env, assetManager);
     if (!globalAssetManager) {
-        LOGE("AAssetManager_fromJava() returned null.\n");
+        LOGE("AAssetManager_fromJava() returned null.");
         assert(false);
     }
 	return 0;
 }
 
 static int gear_start_app(struct engine* engine) {
-    LOGI("gear_start_app()\n");
+    LOGI("gear_start_app()");
     engine->assetManager = globalAssetManager;
     LOGI("width %d, height %d", engine->width, engine->height);
     Scene& gameScene = Scene::GetInstance();
@@ -242,8 +272,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
  * android_native_app_glue.  It runs in its own thread, with its own
  * event loop for receiving input events and doing other things.
  */
-void android_main(struct android_app* state)
-{
+void android_main(struct android_app* state) {
     LOGI("android_main");
     struct engine engine;
 

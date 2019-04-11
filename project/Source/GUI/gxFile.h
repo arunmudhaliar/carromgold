@@ -2,7 +2,8 @@
 #define GXFILE_H
 
 #include <stdio.h>
-//#include "../core/basicIncludes.h"
+#include <string>
+#include "gxBufferFileReader.h"
 
 #ifdef ANDROID
 	typedef long long __int64;
@@ -26,10 +27,13 @@ public:
 	gxFile();
 	~gxFile();
 
-	int	OpenFile(const char* pszFileName, EFILEMODE eFileMode=FILE_r);
+    int	OpenFile(const std::string& filename, EFILEMODE eFileMode=FILE_r);
 	int OpenFileDescriptor(int fd, EFILEMODE eFileMode=FILE_r);
 	//int OpenFile(FILE* fp);
 	
+    static bool GetDataBuffer(const std::string& filename, std::string& buffer, long& size);
+    static gxBufferFileReader* GetDataBufferFile(const std::string& filename);
+    
 	void	Seek(unsigned int off, int flag) const;
 	long    Tell() const;
     

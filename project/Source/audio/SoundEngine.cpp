@@ -8,8 +8,7 @@
 
 #include "SoundEngine.h"
 #include "../GUI/OSUtils.h"
-//#include "../engine/util/objC_util.h"
-//#include "../engine/core/types.h"
+#include "../GUI/gxFile.h"
 
 #if defined(USE_OPENSL)
 #define check(result) check2(result, __LINE__)
@@ -227,7 +226,7 @@ SoundSource* SoundEngine::load(const std::string& filename)
     orig_filename = filename;
     if(filename[0]=='.')
     {
-        orig_filename = cpp_getCurrentWorkingDirectory();
+        orig_filename = OSUtils::cpp_getCurrentWorkingDirectory();
         orig_filename+=&filename[1];
     }
     
@@ -252,34 +251,23 @@ SoundSource* SoundEngine::load(const std::string& filename)
     //
 
     
-    gxFile file;
-#if 0
-    if(m_pFileDescriptorPtr)
-    {
-        stFD* fd=m_pFileDescriptorPtr->getFD(orig_filename.c_str());
-		file.OpenFileDescriptor(fd->fd, gxFile::FILE_r);
-		file.Seek(fd->offset, SEEK_SET);
+    auto fileBuffer = gxFile::GetDataBufferFile(orig_filename);
+    if (!fileBuffer) {
+        DEBUG_PRINT("sound file read ERROR - GetDataBufferFile() returned null - %s", orig_filename.c_str());
+        return nullptr;
     }
-    else
-#endif
-    {
-        file.OpenFile(orig_filename.c_str());
-    }
-
-    
     SoundSample* sample=new SoundSample(orig_filename.c_str());
 #if defined(USE_OPENAL)
-    sample->loadFromFile(file);
+    sample->loadFromFile(*fileBuffer);
 #elif defined(USE_OPENSL)
-    sample->loadFromFile(file, m_pEngineEngine, m_pOutputMixObject);
+    sample->loadFromFile(*fileBuffer, m_pEngineEngine, m_pOutputMixObject);
 #endif
     m_pszSamples.push_back(sample);
-    file.CloseFile();
+    GX_DELETE(fileBuffer);
     //
     
     SoundSource* snd_source=new SoundSource();
     snd_source->createSource(sample, false);
-//    snd_source->play();
     
     m_pszSources.push_back(snd_source);
     

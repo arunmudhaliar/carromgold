@@ -33,7 +33,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
     orig_filename = file_name;
     if(file_name[0]=='.')
     {
-        orig_filename = cpp_getCurrentWorkingDirectory();
+        orig_filename = OSUtils::cpp_getCurrentWorkingDirectory();
         orig_filename+=&file_name[1];
     }
     

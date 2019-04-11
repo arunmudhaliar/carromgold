@@ -8,20 +8,20 @@
 
 #include "OSUtils.h"
 
-//+(const char*) getCurrentWorkingDirectory:(id)sender
-//{
-//    NSString *appPath = [[NSBundle mainBundle] bundlePath];
-//    const char* cString = [appPath cStringUsingEncoding:NSASCIIStringEncoding];
-//    
-//    return cString;
-//}
+namespace OSUtils {
+    const std::string cpp_getCurrentWorkingDirectory() {
+        return "";
+    }
 
-const char* cpp_getCurrentWorkingDirectory()
-{
-    return nullptr;
-}
+    void cpp_setWritablePath(const std::string& path) {
+        writablePath = path;
+    }
 
-std::string cpp_getPath(const std::string& path) {
-    std::string resolvedPath = "/storage/emulated/0/Android/data/com.moonfrog.carromgold/files"+path;
-    return resolvedPath.c_str();
+    const std::string& cpp_getWritablePath() {
+        return writablePath;
+    }
+
+    std::string cpp_getPath(const std::string &path) {
+        return writablePath + path;
+    }
 }

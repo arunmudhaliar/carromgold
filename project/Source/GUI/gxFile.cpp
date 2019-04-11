@@ -14,7 +14,57 @@ gxFile::~gxFile()
 	CloseFile();
 }
 
-int gxFile::OpenFile(const char* pszFileName, EFILEMODE eFileMode/* =FILE_r */)
+bool gxFile::GetDataBuffer(const std::string& filename, std::string& buffer, long& size) {
+    //read shader code
+    size=0;
+    FILE* fp=fopen(filename.c_str(), "r");
+    if(fp==NULL) {
+        DEBUG_PRINT("FILE open ERROR %s", filename.c_str());
+        return false;
+    }
+    
+    fseek(fp, 0, SEEK_END);
+    size=(int)ftell(fp);
+    fclose(fp);
+    
+    if(!size) {
+        DEBUG_PRINT("FILE size ZERO ERROR %s", filename.c_str());
+        return false;
+    }
+    
+    //
+    fp=fopen(filename.c_str(), "r");
+    if(fp==NULL) {
+        DEBUG_PRINT("FILE open ERROR #2 %s", filename.c_str());
+        return false;
+    }
+    
+    char* data=new char[size+1];
+    if (!data) {
+        DEBUG_PRINT("GetDataBuffer() - data allocation ERROR #3", filename.c_str());
+        fclose(fp);
+        return false;
+    }
+    
+    fread((void*)data, 1, size, fp);
+    data[size] = '\0';
+    fclose(fp);
+
+    buffer.assign(data, size);
+    delete [] data;
+    return true;
+}
+
+gxBufferFileReader* gxFile::GetDataBufferFile(const std::string& filename) {
+    long fileSz;
+    std::string data;
+    if (gxFile::GetDataBuffer(filename, data, fileSz)) {
+        return new gxBufferFileReader(data, fileSz);
+    }
+    return nullptr;
+}
+
+int gxFile::OpenFile(const std::string& filename, EFILEMODE eFileMode/* =FILE_r */)
 {
 	//int err=0;
 	m_eFileMode=eFileMode;
@@ -22,20 +72,20 @@ int gxFile::OpenFile(const char* pszFileName, EFILEMODE eFileMode/* =FILE_r */)
 	switch(m_eFileMode)
 	{
 #ifdef _WIN32
-		case FILE_r: fopen_s(&m_pFP, pszFileName, "rb");	break;
-		case FILE_w: fopen_s(&m_pFP, pszFileName, "wb");	break;
-		case FILE_a: fopen_s(&m_pFP, pszFileName, "a");		break;
+		case FILE_r: fopen_s(&m_pFP, filename.c_str(), "rb");	break;
+		case FILE_w: fopen_s(&m_pFP, filename.c_str(), "wb");	break;
+		case FILE_a: fopen_s(&m_pFP, filename.c_str(), "a");		break;
 #else
-		case FILE_r: m_pFP = fopen(pszFileName, "rb");		break;
-		case FILE_w: m_pFP = fopen(pszFileName, "wb");		break;
-		case FILE_a: m_pFP = fopen(pszFileName, "a");		break;
+		case FILE_r: m_pFP = fopen(filename.c_str(), "rb");		break;
+		case FILE_w: m_pFP = fopen(filename.c_str(), "wb");		break;
+		case FILE_a: m_pFP = fopen(filename.c_str(), "a");		break;
 #endif
 	}
 
 	if(m_pFP==NULL)
     {        
 #if LOG_DEBUG_ENGINE
-        DEBUG_PRINT("Error opening file - %s, %s", pszFileName, strerror(errno));
+        DEBUG_PRINT("Error opening file - %s, %s", filename.c_str(), strerror(errno));
 #endif 
         
     }
