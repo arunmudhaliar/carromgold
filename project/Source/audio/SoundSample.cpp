@@ -86,7 +86,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     int err=alGetError();
     if(err!=0)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("openAL ERROR %d at loadFromFile()", err);
 #endif        
     }
@@ -100,7 +100,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     	case 0x1100:	//AL_FORMAT_MONO8
     	{
     		bitrate=SL_PCMSAMPLEFORMAT_FIXED_8;
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("SL_PCMSAMPLEFORMAT_FIXED_8 - mono");
 #endif    		
     	}
@@ -108,7 +108,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     	case 0x1101:	//AL_FORMAT_MONO16
     	{
     		bitrate=SL_PCMSAMPLEFORMAT_FIXED_16;
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("SL_PCMSAMPLEFORMAT_FIXED_16 - mono");	//ok
 #endif
     		
@@ -119,7 +119,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     		bitrate=SL_PCMSAMPLEFORMAT_FIXED_8;
     		nChannels=2;
     		channelMask=SL_SPEAKER_FRONT_LEFT|SL_SPEAKER_FRONT_RIGHT;
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("SL_PCMSAMPLEFORMAT_FIXED_8 - stereo");
 #endif    		
     	}
@@ -129,7 +129,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     		bitrate=SL_PCMSAMPLEFORMAT_FIXED_16;
     		nChannels=2;
     		channelMask=SL_SPEAKER_FRONT_LEFT|SL_SPEAKER_FRONT_RIGHT;
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("SL_PCMSAMPLEFORMAT_FIXED_16 - stereo");
 #endif    		
     	}
@@ -146,7 +146,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
         channelMask, SL_BYTEORDER_LITTLEENDIAN};
 
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 0");
 #endif
     
@@ -164,21 +164,21 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     result = (*engineEngine)->CreateAudioPlayer(engineEngine, &m_pPlayer, &audioSrc, &audioSnk,
         4, player_ids, player_req);
 //    check(result);
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 1");
 #endif    
 
     // realize the player
     result = (*m_pPlayer)->Realize(m_pPlayer, SL_BOOLEAN_FALSE);
     //check(result);
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 2");
 #endif   
 
     // get the play interface
     result = (*m_pPlayer)->GetInterface(m_pPlayer, SL_IID_PLAY, &m_pPlayerPlay);
     //check(result);
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 3");
 #endif
     
@@ -186,7 +186,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
     // get the buffer queue interface
     result = (*m_pPlayer)->GetInterface(m_pPlayer, SL_IID_BUFFERQUEUE, &m_pQueue);
     //check(result);
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 4");
 #endif    
 
@@ -196,25 +196,25 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
 
     result = (*m_pPlayer)->GetInterface(m_pPlayer, SL_IID_VOLUME, &m_pVolume);
     //check(result);
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
    DEBUG_PRINT("sample load 5");
 #endif    
 
     result = (*m_pPlayer)->GetInterface(m_pPlayer, SL_IID_3DLOCATION, (void*)&m_pLocationItf);    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample load 6");
 #endif
     if(m_pLocationItf==NULL)
     {
     	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
        DEBUG_PRINT("SL_IID_3DLOCATION not supported");
 #endif
     }
 
     result = (*m_pPlayerPlay)->SetPlayState(m_pPlayerPlay, SL_PLAYSTATE_STOPPED);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sample loaded");
 #endif
 //    SLmillibel pMaxLevel=0;
@@ -236,7 +236,7 @@ bool SoundSample::loadFromFile(gxFile& file, const SLEngineItf engineEngine, con
 #endif
     }
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("(format=%d, freq=%d, size=%d)", m_iFormat, m_iFrequency, m_iSize);
 #endif
     

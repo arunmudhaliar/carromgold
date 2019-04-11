@@ -18,7 +18,7 @@ void check2(SLresult result, int line)
 {
     if (SL_RESULT_SUCCESS != result)
     {        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("error %s at line %d\n", result, line);
 #endif 
         exit(EXIT_FAILURE);
@@ -53,7 +53,7 @@ void SoundEngine::init(/*FileDesriptor* fd*/)
 {
     //m_pFileDescriptorPtr=fd;
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Sound Engine Initializing...");
 #endif 
     // Initialization
@@ -66,7 +66,7 @@ void SoundEngine::init(/*FileDesriptor* fd*/)
 		m_pContext=alcCreateContext(m_pDevice, NULL);
 		if(m_pContext==NULL)
 		{			
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("m_pContext returned NULL");
 #endif 
 		}
@@ -75,7 +75,7 @@ void SoundEngine::init(/*FileDesriptor* fd*/)
 	}
 	else
 	{		
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("alcOpenDevice returned NULL");
 #endif 
 	}
@@ -88,7 +88,7 @@ void SoundEngine::init(/*FileDesriptor* fd*/)
 
 void SoundEngine::reset()
 {    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("SoundEngine::reset()");
 #endif 
     for(int x=0;x<m_pszSources.size();x++)
@@ -99,14 +99,14 @@ void SoundEngine::reset()
     }
     m_pszSources.clear();
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Sound sources destroyed...");
 #endif 
 
     for(int x=0;x<m_pszSamples.size();x++)
     {
         SoundSample* sample=m_pszSamples[x];        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("destrying sound %s", sample->getName().c_str());
 #endif 
         GX_DELETE(sample);
@@ -115,14 +115,14 @@ void SoundEngine::reset()
     
     m_bPaused=false;
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Sound samples destroyed...");
 #endif 
 }
 
 void SoundEngine::destroyEngine()
 {    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("SoundEngine::destroy()");
 #endif 
 #if defined(USE_OPENAL)
@@ -137,7 +137,7 @@ void SoundEngine::destroyEngine()
         alcCloseDevice(m_pDevice);
         m_pDevice=NULL;
     }    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("openAL destroyed");
 #endif 
 #elif defined(USE_OPENSL)
@@ -195,14 +195,14 @@ void SoundEngine::pause()
         SoundSource* soundSrc=m_pszSources[x];
         if(soundSrc->isPlaying())
         {            
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("pausing %s", soundSrc->getSamplePtr()->getName().c_str());
 #endif 
             soundSrc->pause();
         }
     }
     m_bPaused=true;    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
    DEBUG_PRINT("Sound Engine Paused");
 #endif 
 }
@@ -216,7 +216,7 @@ void SoundEngine::resume()
             soundSrc->resume();
     }
     m_bPaused=false;    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Sound Engine Resumed");
 #endif 
 }
@@ -231,7 +231,7 @@ SoundSource* SoundEngine::load(const std::string& filename)
         orig_filename+=&filename[1];
     }
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("sound file - %s", orig_filename.c_str());
 #endif 
 
@@ -241,7 +241,7 @@ SoundSource* SoundEngine::load(const std::string& filename)
         SoundSample* sample=m_pszSamples[x];
 		if(sample->getName().compare(orig_filename)==0)
         {            
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("sound file - %s already loaded", orig_filename.c_str());
 #endif 
             SoundSource* sourceFound=m_pszSources[x];
@@ -318,7 +318,7 @@ bool SoundEngine::destroySoundSource(SoundSource* source)
         //m_pszSources.remove(source);
         //m_pszSamples.remove(sample);
         
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource %d destroyed", source->getSourceID());
 #endif 
         GX_DELETE(source);
@@ -330,7 +330,7 @@ bool SoundEngine::destroySoundSource(SoundSource* source)
     {
         source->stop();
         m_pszSources.erase(std::remove(m_pszSources.begin(), m_pszSources.end(), source), m_pszSources.end());
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource %d is an instance with out sample destroyed", source->getSourceID());
 #endif 
         GX_DELETE(source);
@@ -385,33 +385,33 @@ void SoundEngine::createListener()
 		required[i] = SL_BOOLEAN_FALSE;
 		iidArray[i] = SL_IID_NULL;
 	}    
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 5");
 #endif 
 	SLresult result = (*m_pEngineEngine)->CreateListener(m_pEngineEngine, &listener, 0, iidArray, required);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 6");
 #endif 
     /* Realizing the listener object in synchronous mode. */
     result = (*listener)->Realize(listener, SL_BOOLEAN_FALSE);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 7");
 #endif 
     result = (*listener)->GetInterface(listener, SL_IID_3DLOCATION, (void *)&listenerLocation);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 8");
 #endif 
     SLVec3D coords;
     coords.x=0;        coords.y=0;        coords.z=0;
     (*listenerLocation)->SetLocationCartesian(listenerLocation, &coords);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 9");
 #endif 
 #endif
@@ -433,21 +433,21 @@ void SoundEngine::createOpenSLEngine()
     result = slCreateEngine(&m_pEngineObject, 1, engine_options, 2, engine_ids, engine_req);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
    DEBUG_PRINT("opensl 0");
 #endif 
     // realize the engine
     result = (*m_pEngineObject)->Realize(m_pEngineObject, SL_BOOLEAN_FALSE);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 1");
 #endif 
     // get the engine interface, which is needed in order to create other objects
     result = (*m_pEngineObject)->GetInterface(m_pEngineObject, SL_IID_ENGINE, &m_pEngineEngine);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 2");
 #endif 
     // create output mix, with environmental reverb specified as a non-required interface
@@ -457,14 +457,14 @@ void SoundEngine::createOpenSLEngine()
     result = (*m_pEngineEngine)->CreateOutputMix(m_pEngineEngine, &m_pOutputMixObject, 2, ids, req);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 3");
 #endif 
     // realize the output mix
     result = (*m_pOutputMixObject)->Realize(m_pOutputMixObject, SL_BOOLEAN_FALSE);
     check(result);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("opensl 4");
 #endif 
 
@@ -481,7 +481,7 @@ void SoundEngine::createOpenSLEngine()
     SLuint32 nextensions=0;
     (*m_pEngineEngine)->QueryNumSupportedExtensions(m_pEngineEngine, &nextensions);
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("No : of openSL extensions supported = %d", nextensions);
 #endif 
     for(int x=0;x<nextensions;x++)
@@ -491,7 +491,7 @@ void SoundEngine::createOpenSLEngine()
     	SLchar name[len];
     	(*m_pEngineEngine)->QuerySupportedExtension(m_pEngineEngine, x, name, &len);
     	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("openSL extension - %s (length=%d)", name, len);
 #endif 
     }
@@ -511,56 +511,56 @@ void SoundEngine::createOpenSLEngine()
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_ENGINE, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_ENGINE supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_LEDDEVICE, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_LEDDEVICE supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_VIBRADEVICE, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_VIBRADEVICE supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_AUDIOPLAYER, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_AUDIOPLAYER supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_AUDIORECORDER, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_AUDIORECORDER supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_MIDIPLAYER, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_MIDIPLAYER supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_LISTENER, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_LISTENER supported with %d interfaces", nInterfaces);
 #endif     	
     }
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_3DGROUP, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_3DGROUP supported with %d interfaces", nInterfaces);
 #endif 
     	
@@ -568,7 +568,7 @@ void SoundEngine::createOpenSLEngine()
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_OUTPUTMIX, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_OUTPUTMIX supported with %d interfaces", nInterfaces);
 #endif 
     	
@@ -576,7 +576,7 @@ void SoundEngine::createOpenSLEngine()
     result = (*m_pEngineEngine)->QueryNumSupportedInterfaces(m_pEngineEngine, SL_OBJECTID_METADATAEXTRACTOR, &nInterfaces);
     if(SL_RESULT_SUCCESS == result)
     {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SL_OBJECTID_METADATAEXTRACTOR supported with %d interfaces", nInterfaces);
 #endif 
     	

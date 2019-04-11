@@ -60,7 +60,7 @@ void geFont::reset()
     m_pFontShaderPtr=NULL;
 #endif
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("geFont Destroyed...");
 #endif 
 }
@@ -73,7 +73,7 @@ bool geFont::load(gxFile& file)
     file.Read(m_iBaseChar);
     file.Read(m_iSpaceWidth);    
     
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("font width=%d, height=%d, buffersize=%d", m_iBitmapWidth, m_iBitmapHeight, m_iBitmapHeight*m_iBitmapWidth*2);
 #endif 
     if(m_nChars==0) return false;
@@ -139,7 +139,7 @@ unsigned int geFont::loadBuffer(unsigned char* buffer, bool bAlpha, unsigned int
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
         
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("texture loaded from buffer - w=%d, h=%d", width, height);
 #endif 	
         
@@ -1124,7 +1124,7 @@ geFont* geFontManager::loadFont(const char* filename)
     }
     
     if (file.OpenFile(orig_filename.c_str(), gxFile::FILE_r)) {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("font %s loading...", orig_filename.c_str());
 #endif 
         newFont->load(file);

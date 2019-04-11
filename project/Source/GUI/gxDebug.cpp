@@ -19,7 +19,7 @@ void DEBUG_PRINT(const char* format, ...)
 #ifdef GEAR_WINDOWS
 	printf("%s\n", buffer);
 #elif defined(GEAR_ANDROID)
-	 __android_log_print(ANDROID_LOG_INFO,"gearApp-native", "%s", buffer);
+	 __android_log_print(ANDROID_LOG_INFO,"carromgold", "%s", buffer);
 #else
 	printf("%s\n", buffer);
 #endif

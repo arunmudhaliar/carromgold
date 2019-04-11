@@ -52,7 +52,7 @@ void SoundSource::createSource(SoundSample* sample, bool bInstance)
     int err=alGetError();
     if(err!=0)
     {        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("openAL ERROR %d on createSource()", err);
 #endif
     }
@@ -71,7 +71,7 @@ void SoundSource::play(bool bLoop)
     int err=alGetError();
     if(err!=0)
     {        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("openAL ERROR %d on Play()", err);
 #endif
     }
@@ -82,7 +82,7 @@ void SoundSource::play(bool bLoop)
 
     if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getQueueInterface())->Enqueue(m_pSoundSamplePtr->getQueueInterface(), m_pSoundSamplePtr->getRawSoundBuffer(), m_pSoundSamplePtr->getBufferSize()))
     {    	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...Enqueue failed on play()");
 #endif
     	stop();
@@ -92,7 +92,7 @@ void SoundSource::play(bool bLoop)
     // register callback on the buffer queue
     if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getQueueInterface())->RegisterCallback(m_pSoundSamplePtr->getQueueInterface(), bqPlayerCallback, this))
     {    	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...Enqueue RegisterCallback on play()");
 #endif
     	stop();
@@ -102,7 +102,7 @@ void SoundSource::play(bool bLoop)
 
     if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getPlayInterface())->SetPlayState(m_pSoundSamplePtr->getPlayInterface(), SL_PLAYSTATE_PLAYING))
     {    	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...Enqueue SetPlayState on play()");
 #endif
     	//stop();
@@ -121,14 +121,14 @@ void SoundSource::stop()
 
 	if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getQueueInterface())->Clear(m_pSoundSamplePtr->getQueueInterface()))
 	{		
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...Clear failed");
 #endif
 	}
 
     if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getPlayInterface())->SetPlayState(m_pSoundSamplePtr->getPlayInterface(), SL_PLAYSTATE_STOPPED))
     {    	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...stop failed");
 #endif
     }
@@ -142,7 +142,7 @@ void SoundSource::pause()
 #elif defined(USE_OPENSL)
 	if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getPlayInterface())->SetPlayState(m_pSoundSamplePtr->getPlayInterface(), SL_PLAYSTATE_PAUSED))
 	{		
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("SoundSource...pause failed");
 #endif
 	}
@@ -157,7 +157,7 @@ void SoundSource::resume()
 #elif defined(USE_OPENSL)
 	if(SL_RESULT_SUCCESS!=(*m_pSoundSamplePtr->getPlayInterface())->SetPlayState(m_pSoundSamplePtr->getPlayInterface(), SL_PLAYSTATE_PLAYING))
 	{		
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
        DEBUG_PRINT("SoundSource...resume failed");
 #endif
 	}
@@ -170,19 +170,19 @@ void bqPlayerCallback(SLBufferQueueItf bq, void *context)
 {
 	SoundSource* source=(SoundSource*)context;
 	
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("callback called for %s", source->getSamplePtr()->getName().c_str());
 #endif	
 	if(source->isLoopable())
 	{
 	    SLresult result;
 		
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("looping...");
 #endif	
 		if(SL_RESULT_SUCCESS!=(*source->getSamplePtr()->getQueueInterface())->Clear(source->getSamplePtr()->getQueueInterface()))
 		{
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("looping...Clear failed");
 #endif				
 			source->stop();
@@ -191,7 +191,7 @@ void bqPlayerCallback(SLBufferQueueItf bq, void *context)
 
 		if(SL_RESULT_SUCCESS!=(*source->getSamplePtr()->getQueueInterface())->Enqueue(source->getSamplePtr()->getQueueInterface(), source->getSamplePtr()->getRawSoundBuffer(), source->getSamplePtr()->getBufferSize()))
 		{
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("looping...Enqueue failed");
 #endif				
 			source->stop();
@@ -201,7 +201,7 @@ void bqPlayerCallback(SLBufferQueueItf bq, void *context)
 	    // register callback on the buffer queue
 		if(SL_RESULT_SUCCESS!=(*source->getSamplePtr()->getQueueInterface())->RegisterCallback(source->getSamplePtr()->getQueueInterface(), bqPlayerCallback, context))
 		{
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("looping...RegisterCallback failed");
 #endif				
 			//source->stop();

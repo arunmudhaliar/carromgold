@@ -3,7 +3,7 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
-#define  LOG_TAG    "gearApp-native"
+#define  LOG_TAG    "carromgold"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__))
@@ -43,25 +43,25 @@ extern "C" {
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-	LOGI("carromgold : JNI_OnLoad executed");
+	LOGI("JNI_OnLoad executed");
 	return JNI_VERSION_1_6;
 }
 
 JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv* env, jobject obj, jobject assetManager)
 {
-    LOGI("carromgold : mainlib()\n");
+    LOGI("mainlib()\n");
     globalAssetManager = AAssetManager_fromJava(env, assetManager);
     if (!globalAssetManager) {
-        LOGE("carromgold : AAssetManager_fromJava() returned null.\n");
+        LOGE("AAssetManager_fromJava() returned null.\n");
         assert(false);
     }
 	return 0;
 }
 
 static int gear_start_app(struct engine* engine) {
-    LOGI("carromgold : gear_start_app()\n");
+    LOGI("gear_start_app()\n");
     engine->assetManager = globalAssetManager;
-    LOGI("carromgold : width %d, height %d", engine->width, engine->height);
+    LOGI("width %d, height %d", engine->width, engine->height);
     Scene& gameScene = Scene::GetInstance();
     gameScene.InitScene(engine->width*2, engine->height*2);
     gameScene.Resize(engine->width*2, engine->height*2);
@@ -244,7 +244,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
  */
 void android_main(struct android_app* state)
 {
-    LOGI("carromgold : android_main");
+    LOGI("android_main");
     struct engine engine;
 
     // Make sure glue isn't stripped.
@@ -272,5 +272,5 @@ void android_main(struct android_app* state)
         }
     } while (!state->destroyRequested);
 
-    LOGI("carromgold : EXITED\n");
+    LOGI("EXITED\n");
 }

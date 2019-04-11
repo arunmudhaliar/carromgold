@@ -17,27 +17,28 @@ public class MainActivity extends NativeActivity {
 
 	public boolean firstlaunch=true;
     private AssetManager assetManager;
+    private static final String APP_NAME = "carromgold";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("carromgold : onCreate()");
+        Log.i(APP_NAME, "onCreate()");
         assetManager = getAssets();
         mainlib(assetManager);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             File[] files = getExternalFilesDirs(null);
             for (int x=0;x<files.length;x++) {
-                System.out.println("carromgold : writablepath - " + files[x].getAbsolutePath());
+                Log.i(APP_NAME, "writablepath - " + files[x].getAbsolutePath());
             }
 
             AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            System.out.println("carromgold : OpenSL Sample rate - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE).toString());
-            System.out.println("carromgold : OpenSL Sample buffer size - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER).toString());
+            Log.i(APP_NAME, "OpenSL Sample rate - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE).toString());
+            Log.i(APP_NAME, "OpenSL Sample buffer size - " + myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER).toString());
         }
 
         setContentView(R.layout.activity_main);
-        System.out.println("carromgold : getExternalStorageDirectory "+ Environment.getExternalStorageDirectory());
+        Log.i(APP_NAME, "getExternalStorageDirectory "+ Environment.getExternalStorageDirectory());
     }
 
 

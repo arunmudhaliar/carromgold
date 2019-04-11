@@ -46,7 +46,7 @@ struct steTexturePacket {
         releaseTextureData();
         
         if (textureName) {
-    #if defined (LOG_DEBUG_ENGINE)
+    #if LOG_DEBUG_ENGINE
             DEBUG_PRINT("unloading texture : %s", textureName);
     #endif
         }

@@ -34,7 +34,7 @@ int gxFile::OpenFile(const char* pszFileName, EFILEMODE eFileMode/* =FILE_r */)
 
 	if(m_pFP==NULL)
     {        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("Error opening file - %s, %s", pszFileName, strerror(errno));
 #endif 
         
@@ -63,7 +63,7 @@ int gxFile::OpenFileDescriptor(int fd, EFILEMODE eFileMode)
 
     if(m_pFP==NULL)
     {        
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
         DEBUG_PRINT("Error opening file - %s", strerror(errno));
 #endif 
     }
@@ -87,7 +87,7 @@ void gxFile::CloseFile()
 //#ifndef ANDROID
         if(fclose(m_pFP))
         {
-#if defined (LOG_DEBUG_ENGINE)
+#if LOG_DEBUG_ENGINE
             DEBUG_PRINT("Error closing file - %s", strerror(errno));
 #endif 
             
