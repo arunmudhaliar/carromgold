@@ -61,10 +61,10 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
 #if !ENABLE_MULTIPLAYER
     this->SetGameState(GAME_START);
 #endif
-    // TODO : need to set from the network data.
-//    this->boardMatrix.setRotationMatrix(180, 0, 0, true);
-    this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
-    this->boardMatrixInv = this->boardMatrix.getInverse();
+//    // TODO : need to set from the network data.
+////    this->boardMatrix.setRotationMatrix(180, 0, 0, true);
+//    this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
+//    this->boardMatrixInv = this->boardMatrix.getInverse();
 }
 
 void Board::UpdateBoard() {

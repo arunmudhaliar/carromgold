@@ -53,20 +53,21 @@ public:
 #else
     void InitScene(float cx, float cy);
 #endif
+    void StartGameFromMenu();
+    
     void Resize(float cx, float cy);
     void Update();
     void Render();
     
-    void StartGameFromMenu();
+    // input
     void MouseBtnDown(int mx, int my);
     void MouseBtnUp(int mx, int my);
     void MouseMove(int mx, int my);
     
+    // util
     vector2x WindowToBoard(const vector2x& windowCoord);
     
 protected:
-    vector2i windowSize;
-    Board board;
     
 #if ENABLE_MULTIPLAYER
     // NetworkManagerDelegate
@@ -77,36 +78,39 @@ protected:
 #endif
     
     void DrawStats();
-    
     void SendPing();
     
 private:
     
     void InternalGLStates();
 
+    // window
+    vector2i windowSize;
 #if GEAR_APPLE
     SDL_Window* window;
 #endif
 
+    // global
+    CGETextureManager textureManager;
+    SoundEngine soundEngine;
+    
+    // game play
+    Board board;
     std::string player1Score;
     std::string player2Score;
     std::string statusMsg;
 
-    CGETextureManager textureManager;
-    SoundEngine soundEngine;
+    // debug
+    gxButton debugButton1;
+    gxButton debugButton2;
+    gxButton debugButton3;
+    std::vector<gxButton*> debugBtnList;
     
-    SoundSource* sfx_breakShot;
-    
+
     //renderer
     matrix4x4f worldScale;
     gxRenderer renderer;
     matrix4x4f projectionMatrix;
     matrix4x4f inverseTransformationMatrix;
     matrix4x4f viewProjectionMatrix;
-    
-    gxButton debugButton1;
-    gxButton debugButton2;
-    gxButton debugButton3;
-    
-    std::vector<gxButton*> debugBtnList;
 };

@@ -52,14 +52,14 @@ public:
     void MouseBtnDown(const vector2x& pos);
     void MouseMove(const vector2x& pos);
     
-    Stricker& GetPlayerStricker() { return this->playerStricker; }
-    Stricker& GetOpponentStricker() { return this->opponentStricker; }
-    GAME_STATE GetBoardState() { return this-> gameState; }
-    PLAYER_TYPE GetPlayerType() { return this->playerType; }
-    void SetPlayerType(PLAYER_TYPE type) { this->playerType = type; }
+    inline Stricker& GetPlayerStricker()            { return this->playerStricker; }
+    inline Stricker& GetOpponentStricker()          { return this->opponentStricker; }
+    inline GAME_STATE GetBoardState()               { return this-> gameState; }
+    inline PLAYER_TYPE GetPlayerType()              { return this->playerType; }
+    inline void SetPlayerType(PLAYER_TYPE type)     { this->playerType = type; }
+    inline bool IsMyTurn()                          { return this->gameTurn==TURN_PLAYER; }
     
     void TryStartGame();
-    inline bool IsMyTurn() { return this->gameTurn==TURN_PLAYER; }
     void TryTurnPlayer(bool force = false);
     void TryTurnOpponent(bool force = false);
     
@@ -85,8 +85,6 @@ protected:
     PLAYER_TYPE playerType;
     PLAYER_TURN gameTurn;
     
-    matrix4x4f boardMatrix;
-    matrix4x4f boardMatrixInv;
     Solver physicsSolver;
     GAME_STATE gameState;
     Stricker playerStricker;
@@ -100,12 +98,16 @@ protected:
     Wall leftWall;
     Wall rightWall;
     
+    // only used for rendering purpose
+    matrix4x4f boardMatrix;
+    matrix4x4f boardMatrixInv;
     Sprite2Dx bgSprite;
     Sprite2Dx boardSprite;
     Sprite2Dx whiteCoinSprite;
     Sprite2Dx blackCoinSprite;
     Sprite2Dx queenSprite;
     
+    // dont delete this pointer
     SoundEngine* soundEnginePtr;
 };
 
