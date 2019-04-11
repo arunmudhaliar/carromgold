@@ -54,8 +54,8 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
     vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
     strickerPos.y=0;
-    strickerPos.y+=FTOX(BOARD_SIZE.y*0.172f);
-    playerStricker.InitStricker(BALL_SIZE*1.15f, 0.3, 0.029f, leftOriginPosx+strickerPos, textureManager, this->soundEnginePtr);
+    strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(0.172f));
+    playerStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), leftOriginPosx+strickerPos, textureManager, this->soundEnginePtr);
     
     this->SetGameState(GAME_INIT);
 #if !ENABLE_MULTIPLAYER
@@ -74,7 +74,7 @@ void Board::UpdateBoard() {
         if (this->gameState==GAME_PLAYER_FIRE && this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
             vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
             strickerPos.y=0;
-            strickerPos.y+=FTOX(BOARD_SIZE.y*0.172f);
+            strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(0.172f));
             vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
             playerStricker.SetRBPosition(leftOriginPosx+strickerPos, true);
             SetGameState(GAME_PLAYER_PLACE_STRICKER);
@@ -249,10 +249,10 @@ void Board::OnGameInit() {
     topWall.InitWall(vector2x(BOARD_SIZEx.x, BOTTOM_TOP_WALL_HEIGHTx), leftOriginPosx+vector2x(0, BOARD_SIZEx.y-BOTTOM_TOP_WALL_HEIGHTx+ITOX(25)), this->soundEnginePtr);
     
     
-    holes[0].initHole(24, leftOriginPosx + vector2x(ITOX(36), ITOX(36)));
-    holes[1].initHole(24, leftOriginPosx + vector2x(ITOX(36), BOARD_SIZEx.y-ITOX(36)));
-    holes[2].initHole(24, leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), ITOX(36)));
-    holes[3].initHole(24, leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), BOARD_SIZEx.y-ITOX(36)));
+    holes[0].initHole(ITOX(24), leftOriginPosx + vector2x(ITOX(36), ITOX(36)));
+    holes[1].initHole(ITOX(24), leftOriginPosx + vector2x(ITOX(36), BOARD_SIZEx.y-ITOX(36)));
+    holes[2].initHole(ITOX(24), leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), ITOX(36)));
+    holes[3].initHole(ITOX(24), leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), BOARD_SIZEx.y-ITOX(36)));
     
     physicsSolver.AddRigidBody(&playerStricker);
     
@@ -274,12 +274,12 @@ void Board::ResetCoins() {
     vector2x center;
     int ballId=0;
     
-    const float COIN_FRICTION_FACTOR = 0.05f;
-    const float COIN_MASS = 0.3f;
-    const int COIN_SIZE = 15;
-    
-    intx r2 = FTOX((COIN_SIZE*2.05f));
+    const intx COIN_FRICTION_FACTOR = FTOX(0.05f);
+    const intx COIN_MASS = FTOX(0.3f);
+    const intx COIN_SIZE = FTOX(15);
+    intx r2 = MULTX(COIN_SIZE, FTOX(2.05f));
     intx restituition = FTOX(0.09f);
+    
     // queen coin
     Ball* queenBall = new Ball();
     queenBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center, &this->queenSprite, this->soundEnginePtr);
@@ -310,8 +310,8 @@ void Board::ResetCoins() {
     }
     
     // outer circle
-    intx r3 = FTOX((COIN_SIZE*4.1f));
-    intx r32 = FTOX((COIN_SIZE*3.51f));
+    intx r3 = MULTX(COIN_SIZE, FTOX(4.1f));
+    intx r32 = MULTX(COIN_SIZE, FTOX(3.51f));
     for (int x=0;x<12;x++) {
         Ball* newBall = new Ball();
         vector2x newPos;

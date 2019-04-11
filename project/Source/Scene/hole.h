@@ -19,13 +19,13 @@ public:
     Hole();
     virtual ~Hole();
     
-    void initHole(float size, const vector2x& pos);
+    void initHole(intx size, const vector2x& pos);
     void SetColor(float r, float g, float b, float a=1.0f);
     
     bool IsOverlap(vector2x& pos, const intx radius, intx penitration=FTOX(0.75f));
 protected:
     float vertexBuffer[(SEGMENTS+2)*2];
-    float size;
+    intx size;
     virtual void OnRender(const matrix4x4f& viewProjection);
     
     float color[4];

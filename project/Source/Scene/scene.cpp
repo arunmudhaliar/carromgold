@@ -153,9 +153,7 @@ void Scene::Resize(float cx, float cy) {
 vector2x Scene::WindowToBoard(const vector2x& windowCoord) {
     gxRectf viewportRect(renderer.getViewPortRect());
     vector2f boardCenterf(viewportRect.m_size*0.5f - viewportRect.m_pos);
-    vector2x boardCenterx(FTOX(boardCenterf.x), FTOX(boardCenterf.y));
-    //boardCenterx-=(BOARD_OFFSETx*FTOX(0.5f));
-    
+    vector2x boardCenterx(FTOX(boardCenterf.x), FTOX(boardCenterf.y));    
     float scale = BOARD_SIZE.x/this->windowSize.x;
     
     return (windowCoord - boardCenterx)*scale;

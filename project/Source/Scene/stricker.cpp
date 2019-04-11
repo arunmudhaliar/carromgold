@@ -41,7 +41,7 @@ Stricker::Stricker() : Ball() {
 Stricker::~Stricker() {
 }
 
-void Stricker::InitStricker(float size, float mass, float frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
+void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
     this->strickerSprite.setOffset(0.0f, 0.0f);
     this->strickerSprite.loadTexture(&textureManager, cpp_getPath("/res/sprites/Sticker.png").c_str());
     
@@ -202,9 +202,8 @@ void Stricker::OnPostInitBall() {
     }
 }
 
-bool Stricker::IsOverlap(intx x, intx y) {
-    vector2x input(x, y);
-    if ((input-GetRBPosition()).lengthx()<this->GetRadius()) {
+bool Stricker::IsOverlap(const vector2x& pos) {
+    if ((pos-GetRBPosition()).lengthx()<this->GetRadius()) {
         return true;
     }
     return false;

@@ -26,13 +26,13 @@ void Hole::SetColor(float r, float g, float b, float a) {
     this->color[3] = a;
 }
 
-void Hole::initHole(float size, const vector2x& pos) {
+void Hole::initHole(intx size, const vector2x& pos) {
     this->size = size;
     int delta = (360/SEGMENTS);
     vertexBuffer[0]=vertexBuffer[1] = 0.0f;
     for(int xx=0; xx<SEGMENTS; xx++) {
-        float cs=size*cos(DEG2RAD((float)xx*delta));
-        float sn=size*sin(DEG2RAD((float)xx*delta));
+        float cs=XTOF(size)*cos(DEG2RAD((float)xx*delta));
+        float sn=XTOF(size)*sin(DEG2RAD((float)xx*delta));
         vertexBuffer[(xx+1)*2+0]=cs;
         vertexBuffer[(xx+1)*2+1]=sn;
     }
@@ -59,8 +59,8 @@ bool Hole::IsOverlap(vector2x& pos, const intx radius, intx penitration) {
     vector2x v = pos - getPosition2x();
 //    intx bothradius = radius + FTOX(this->size);
     intx distance = v.lengthx();
-    if (distance < FTOX(this->size)) {
-        intx ratio = DIVX(distance, FTOX(this->size));
+    if (distance < this->size) {
+        intx ratio = DIVX(distance, this->size);
         if (ratio < penitration) {
             return true;
         }

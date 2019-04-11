@@ -20,7 +20,7 @@ public:
     Ball();
     virtual ~Ball();
     
-    void initBall(float size, float mass, float frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr);
+    void initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr);
     void SetColor(float r, float g, float b, float a=1.0f);
 protected:
     float vertexBuffer[(SEGMENTS+2)*2];

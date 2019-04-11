@@ -36,13 +36,13 @@ void Ball::SetColor(float r, float g, float b, float a) {
     this->color[3] = a;
 }
 
-void Ball::initBall(float size, float mass, float frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr) {
+void Ball::initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr) {
     this->soundEnginePtr = soundEnginePtr;
-    this->size = size;
+    this->size = XTOF(size);
     this->sprite = sprite;
-    SetRadius(FTOX(size));
-    SetMass(FTOX(mass));
-    SetFrictionFactor(FTOX(frictionFactor));
+    SetRadius(size);
+    SetMass(mass);
+    SetFrictionFactor(frictionFactor);
     int delta = (360/SEGMENTS);
     vertexBuffer[0]=vertexBuffer[1] = 0.0f;
     for(int xx=0; xx<SEGMENTS; xx++) {

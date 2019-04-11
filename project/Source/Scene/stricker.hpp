@@ -62,8 +62,8 @@ public:
     
     Stricker();
     virtual ~Stricker();
-    void InitStricker(float size, float mass, float frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr);
-    bool IsOverlap(intx x, intx y);
+    void InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr);
+    bool IsOverlap(const vector2x& pos);
     bool IsGrabed() { return this->grabed; }
     bool IsAim()    { return this->inputIsAim; }
     bool IsMove()   { return this->inputIsMove; }
