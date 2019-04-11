@@ -13,8 +13,8 @@
 
 #define FIXED_DT_READABLE    16             // 60 fps
 #define FIXED_DT_THRESHOLD_READABLE    40   // 25 fps
-#define FIXED_DT    FTOX(0.016f)            // 60 fps
-#define GRAVITY -ITOX(100)
+#define FIXED_DT    66  // = FTOX(0.016f)            // 60 fps
+#define GRAVITY -409600 // = ITOX(100)
 #define ISGRAVITY   0
 
 Solver::Solver() {
@@ -94,7 +94,7 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
         if (collisionHappened) {
             rb->SetStateInActiveCollision(true);
             
-            const intx degenerationFactor = FTOX(0.05f);  //0.1f
+            const intx degenerationFactor = 205;    // = FTOX(0.05f);  //0.1f
             newPos = newPos + contactNormal*degenerationFactor;
             rb->SetRBPosition(newPos, true);
             
@@ -151,7 +151,8 @@ void CalculateImpulse(RigidBody& A, RigidBody& B, vector2x& Avel, vector2x& Bvel
 
 bool Solver::IsAllRigidBodiesStopped() {
     for (auto rb : this->rigidBodies) {
-        if (rb->GetRBVelocity().lengthSquaredx()>=FTOX(2.0f)) {
+        intx threshold = 8192;  // =FTOX(2.0f)
+        if (rb->GetRBVelocity().lengthSquaredx()>=threshold) {
             return false;
         }
     }
@@ -209,12 +210,12 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
                     if (std::find(colliders.begin(), colliders.end(), boxCollider)==colliders.end()) {
                         colliders.push_back(boxCollider);
                         auto rbVel = rb->GetRBVelocity();
-//                        intx rbVelMag = MULTX(rbVel.lengthx(), FTOX(1.15f));
                         intx rbVelMag = rbVel.lengthx();
                         rbVel.normalizex();
                         
                         //r = 2(n.l)n-l;
-                        vector2x refl = normals[x] * MULTX(normals[x].dotx(-rbVel), ITOX(2)) + rbVel;
+                        intx two = 8192;    //= ITOX(2)
+                        vector2x refl = normals[x] * MULTX(normals[x].dotx(-rbVel), two) + rbVel;
                         rb->SetRBVelocity((refl)*rbVelMag);
                     }
                     boxCollider->CollidedWithRB(rb, i2, diff);

@@ -135,7 +135,8 @@ public:
         n2 = MULTX((p1.y-p2.y), (p1.x-p3.x)) + MULTX((p2.x-p1.x), (p1.y-p3.y));
         d2 = MULTX((p4.x-p3.x), (p1.y-p2.y)) - MULTX((p1.x-p2.x), (p4.y-p3.y));
         
-        if (ABS(XTOF(d1)) < 0.001f || ABS(XTOF(d2)) < 0.001f) {
+        intx threshold = 4; // = 0.001f * 4096
+        if (ABS(d1) < threshold || ABS(d2) < threshold) {
             return false;
         }
             

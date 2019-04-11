@@ -74,7 +74,7 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     this->initBall(size, mass, frictionfactor, pos, &this->strickerSprite, soundEnginePtr);
     this->SetColor(0.5f, 0.58f, 0.4f);
     this->SetTag("Stricker");
-    this->SetRestituition(FTOX(0.09f));
+    this->SetRestituition(367);   //=FTOX(0.09f)
 }
 
 void Stricker::OnPostInitBall() {

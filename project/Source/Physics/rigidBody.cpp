@@ -21,7 +21,7 @@ RigidBody::RigidBody() : Collider(true) {
     SetMass(FX_ONE);
     SetFrictionFactor(0);
     SetRadius(ITOX(20));
-    SetRestituition(FTOX(0.09f));
+    SetRestituition(367);   //=FTOX(0.09f)
     
     SetStateInActiveCollision(false);
     this->isMoving = false;
