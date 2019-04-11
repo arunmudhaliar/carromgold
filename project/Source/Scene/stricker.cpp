@@ -43,27 +43,27 @@ Stricker::~Stricker() {
 
 void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
     this->strickerSprite.setOffset(0.0f, 0.0f);
-    this->strickerSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/Sticker.png").c_str());
+    this->strickerSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Sticker.png").c_str());
     
     this->directionSprite.setOffset(0, 1);
-    this->directionSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/arrow.png").c_str());
+    this->directionSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/arrow.png").c_str());
     
     this->moveToolSprite.setOffset(0, 0);
-    this->moveToolSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/MoveTool.png").c_str());
+    this->moveToolSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool.png").c_str());
     
     this->moveArrows[0].setOffset(0, 0);
-    this->moveArrows[0].loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[0].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
     this->moveArrows[0].setScale(1.15f, 1.15f);
     this->moveArrows[1].setOffset(0, 0);
-    this->moveArrows[1].loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[1].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
     this->moveArrows[1].setScale(0.75f, 0.75f);
     this->moveArrows[1].setAlpha(0.5f);
     this->moveArrows[2].setOffset(0, 0);
-    this->moveArrows[2].loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[2].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
     this->moveArrows[2].setScale(1.15f, 1.15f);
     this->moveArrows[2].setRotation(180);
     this->moveArrows[3].setOffset(0, 0);
-    this->moveArrows[3].loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[3].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
     this->moveArrows[3].setRotation(180);
     this->moveArrows[3].setScale(0.75f, 0.75f);
     this->moveArrows[3].setAlpha(0.5f);

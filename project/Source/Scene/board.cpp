@@ -36,19 +36,19 @@ Board::~Board() {
 void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
     this->soundEnginePtr = soundEnginePtr;
     this->bgSprite.setOffset(0, 0);
-    this->bgSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/bg.png").c_str());
+    this->bgSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/bg.png").c_str());
     this->bgSprite.setScale(viewPort.x/bgSprite.getClipWidth(), viewPort.y/bgSprite.getClipHeight());
     
     
     this->boardSprite.setOffset(0, 0);
-    this->boardSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/CarromBoard_1.png").c_str());
+    this->boardSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/CarromBoard_1.png").c_str());
     
     this->blackCoinSprite.setOffset(0.0f, 0.0f);
-    this->blackCoinSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/BlackP.png").c_str());
+    this->blackCoinSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/BlackP.png").c_str());
     this->whiteCoinSprite.setOffset(0.0f, 0.0f);
-    this->whiteCoinSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/WhiteP.png").c_str());
+    this->whiteCoinSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/WhiteP.png").c_str());
     this->queenSprite.setOffset(0.0f, 0.0f);
-    this->queenSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("/res/sprites/RedP.png").c_str());
+    this->queenSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/RedP.png").c_str());
     
     // stricker
     vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));

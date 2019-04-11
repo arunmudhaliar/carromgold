@@ -39,7 +39,8 @@ public:
 	void	Read(__int64& v);
 #endif
     void    ReadBuffer(unsigned char* buffer, unsigned long cnt);
-
+    
+private:
     const std::string& fileBuffer;
     
 private:

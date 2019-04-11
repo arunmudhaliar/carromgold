@@ -20,6 +20,26 @@
 #include <malloc.h>
 #endif
 #include "../OSUtils.h"
+#include "../gxFile.h"
+
+struct PNGSource {
+    unsigned char* data;
+    int size;
+    int offset;
+};
+
+static void pngReadCallback(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+    PNGSource* isource = (PNGSource*)png_get_io_ptr(png_ptr);
+    
+    if(isource->offset + length <= isource->size)
+    {
+        memcpy(data, isource->data+isource->offset, length);
+        isource->offset += length;
+    }
+    else
+        png_error(png_ptr, "pngReaderCallback failed");
+}
 
 int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigned int& cy, unsigned int& bpp)
 {
@@ -37,17 +57,21 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
         orig_filename+=&file_name[1];
     }
     
+    std::string pngBuffer;
+    long pngSize;
+    gxFile::GetDataBuffer(orig_filename, pngBuffer, pngSize);
     /* open file and test for it being a png */
-    FILE *fp = fopen(orig_filename.c_str(), "rb");
-    if (!fp)
-    {
-		//DEBUG_PRINT("[read_png_file] File %s could not be opened for reading", file_name);
-		return 0;
-	}
-    fread(header, 1, 8, fp);
+//    FILE *fp = fopen(orig_filename.c_str(), "rb");
+//    if (!fp)
+//    {
+//        //DEBUG_PRINT("[read_png_file] File %s could not be opened for reading", file_name);
+//        return 0;
+//    }
+//    fread(header, 1, 8, fp);
+    memcpy(header, pngBuffer.c_str(), 8);
     if (png_sig_cmp(header, 0, 8))
     {
-		fclose(fp);
+//        fclose(fp);
 		//DEBUG_PRINT("[read_png_file] File %s is not recognized as a PNG file", file_name);
 		return 0;
 	}
@@ -58,7 +82,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
 
     if (!png_ptr)
     {
-		fclose(fp);
+//        fclose(fp);
 		png_destroy_read_struct(&png_ptr, NULL, NULL);
 		//DEBUG_PRINT("[read_png_file] png_create_read_struct failed");
 		return 0;
@@ -67,7 +91,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
     {
-		fclose(fp);
+//        fclose(fp);
 		png_destroy_read_struct(&png_ptr, NULL, NULL);
 		//DEBUG_PRINT("[read_png_file] png_create_info_struct failed");
 		return 0;
@@ -77,21 +101,30 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
 	png_infop end_info = png_create_info_struct(png_ptr);
 	if (!end_info)
 	{
-		fclose(fp);
+//        fclose(fp);
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
 		//DEBUG_PRINT("Unable to create png end info : %s");
 		return 0;
 	}
 
+    PNGSource pngSrcImg;
+    pngSrcImg.data = (unsigned char*)(pngBuffer.c_str()+8);
+    pngSrcImg.size = (int)pngSize;
+    pngSrcImg.offset = 0;
+    
+    png_set_read_fn(png_ptr, &pngSrcImg, pngReadCallback);
+    
     if (setjmp(png_jmpbuf(png_ptr)))
     {
-		fclose(fp);
+//        fclose(fp);
 		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 		//DEBUG_PRINT("[read_png_file] Error during init_io");
 		return 0;
 	}
 
-    png_init_io(png_ptr, fp);
+    
+    
+//    png_init_io(png_ptr, fp);
     png_set_sig_bytes(png_ptr, 8);
 
 	//png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
@@ -133,7 +166,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
     ///* read file */
     if (setjmp(png_jmpbuf(png_ptr)))
     {
-		fclose(fp);
+//        fclose(fp);
 		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 		//DEBUG_PRINT("[read_png_file] Error during read_image");
 		return 0;
@@ -147,7 +180,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
 	png_byte *image_data = new png_byte[rowbytes * height];
 	if (!image_data)
 	{
-		fclose(fp);
+//        fclose(fp);
 		//clean up memory and close stuff
 		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 		//LOGE("Unable to allocate image_data while loading %s ", filename);
@@ -158,7 +191,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
     png_bytep* row_pointers = new  png_bytep[height];
 	if  (!row_pointers)
 	{
-		fclose(fp);
+//        fclose(fp);
 		//clean up memory and close stuff
 		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 		delete[] image_data;
@@ -206,7 +239,7 @@ int read_png_file(const char* file_name, bool& bAlpha, unsigned int& cx, unsigne
 	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 	delete[] image_data;
 	free(row_pointers);
-    fclose(fp);
+//    fclose(fp);
 
 	////DEBUG_PRINT("%s : size(%d, %d), format %d, compressed size %d bytes\n", out_filename, width, height, out_format, compressedSize);
 	return texID;

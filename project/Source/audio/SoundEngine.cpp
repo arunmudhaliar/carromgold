@@ -251,19 +251,20 @@ SoundSource* SoundEngine::load(const std::string& filename)
     //
 
     
-    auto fileBuffer = gxFile::GetDataBufferFile(orig_filename);
-    if (!fileBuffer) {
-        DEBUG_PRINT("sound file read ERROR - GetDataBufferFile() returned null - %s", orig_filename.c_str());
+    std::string tempFileBuffer;
+    long tempFileSize;
+    if (!gxFile::GetDataBuffer(orig_filename, tempFileBuffer, tempFileSize)) {
+        DEBUG_PRINT("sound file read ERROR - GetDataBuffer() returned false - %s", orig_filename.c_str());
         return nullptr;
     }
+    gxBufferFileReader fileBufferReader(tempFileBuffer, tempFileSize);
     SoundSample* sample=new SoundSample(orig_filename.c_str());
 #if defined(USE_OPENAL)
-    sample->loadFromFile(*fileBuffer);
+    sample->loadFromFile(fileBufferReader);
 #elif defined(USE_OPENSL)
-    sample->loadFromFile(*fileBuffer, m_pEngineEngine, m_pOutputMixObject);
+    sample->loadFromFile(fileBufferReader, m_pEngineEngine, m_pOutputMixObject);
 #endif
     m_pszSamples.push_back(sample);
-    GX_DELETE(fileBuffer);
     //
     
     SoundSource* snd_source=new SoundSource();

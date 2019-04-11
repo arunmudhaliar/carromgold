@@ -57,7 +57,11 @@ void Sprite::copySprite(Sprite& sprite)
 
 void Sprite::loadTexture(CGETextureManager* textureManager, const char *pszFileName)
 {
-	steTexturePacket *tp = textureManager->LoadTexture(pszFileName); 
+	steTexturePacket *tp = textureManager->LoadTexture(pszFileName);
+    if (!tp) {
+        DEBUG_PRINT("Texture not found - %s", pszFileName);
+        return;
+    }
 	textureObject.setTexturePack(tp);
 	
 	if(tp->isAlphaTexure)

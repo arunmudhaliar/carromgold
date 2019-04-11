@@ -1043,8 +1043,8 @@ void geFontManager::InitializeFonts()
     
 //    g_pFontArial10_84Ptr=g_cFontManager.loadFont("res//fonts//arial_iphone10_84.ecf");
 //    g_pFontArial10_80Ptr=g_cFontManager.loadFont("res//fonts//arial_iphone10_80.ecf");
-    g_pFontArial10_84Ptr=g_cFontManager.loadFont(OSUtils::cpp_getPath("/res/fonts/arial_iphone10_84.ecf").c_str());
-    g_pFontArial10_80Ptr=g_cFontManager.loadFont(OSUtils::cpp_getPath("/res/fonts/arial_iphone10_80.ecf").c_str());
+    g_pFontArial10_84Ptr=g_cFontManager.loadFont(OSUtils::cpp_getPath("res/fonts/arial_iphone10_84.ecf").c_str());
+    g_pFontArial10_80Ptr=g_cFontManager.loadFont(OSUtils::cpp_getPath("res/fonts/arial_iphone10_80.ecf").c_str());
 
     
     if (g_pFontArial10_84Ptr) {
@@ -1075,10 +1075,10 @@ void geFontManager::init()
 #if GEAR_WINDOWS
         m_cFontShader.loadShader(OSUtils::cpp_getPath("res/shadersWin32/hwshader/fontshader.glsl"));
 #elif GEAR_ANDROID
-        m_cFontShader.loadShader(OSUtils::cpp_getPath("/res/shadersWin32/hwshader/fontshader.glsl"));
+        m_cFontShader.loadShader(OSUtils::cpp_getPath("res/shadersWin32/hwshader/fontshader.glsl"));
 #elif GEAR_APPLE
         //resource_dir_root_path="./Contents/Resources/res/shadersWin32/";
-        m_cFontShader.loadShader(OSUtils::cpp_getPath("/res/shadersWin32/hwshader/fontshader.glsl"));
+        m_cFontShader.loadShader(OSUtils::cpp_getPath("res/shadersWin32/hwshader/fontshader.glsl"));
 #endif
     }
 #endif
@@ -1124,18 +1124,20 @@ geFont* geFontManager::loadFont(const char* filename)
     }
     
     
-    auto fileBuffer = gxFile::GetDataBufferFile(orig_filename);
-    if (!fileBuffer) {
+    std::string tempFileBuffer;
+    long tempFileSize;
+    if (!gxFile::GetDataBuffer(orig_filename, tempFileBuffer, tempFileSize)) {
         GX_DELETE(newFont);
         newFont = nullptr;
-        DEBUG_PRINT("font file read ERROR - GetDataBufferFile() returned null - %s", orig_filename.c_str());
+        DEBUG_PRINT("font file read ERROR - GetDataBuffer() returned false - %s", orig_filename.c_str());
         return nullptr;
     }
+    gxBufferFileReader fileBufferReader(tempFileBuffer, tempFileSize);
     
 #if LOG_DEBUG_ENGINE
     DEBUG_PRINT("font %s loading...", orig_filename.c_str());
 #endif 
-    newFont->load(*fileBuffer);
+    newFont->load(fileBufferReader);
     m_cvFontList.push_back(newFont);
     
     return newFont;

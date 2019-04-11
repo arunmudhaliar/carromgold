@@ -21,7 +21,15 @@ namespace OSUtils {
         return writablePath;
     }
 
+    void cpp_setAssetManager(AAssetManager* am) {
+        assetManager = am;
+    }
+
+    AAssetManager* cpp_getAssetManager() {
+        return assetManager;
+    }
+
     std::string cpp_getPath(const std::string &path) {
-        return writablePath + path;
+        return /*writablePath +*/ path;
     }
 }

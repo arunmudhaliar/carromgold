@@ -2,6 +2,13 @@
 #include <string.h>
 #include <errno.h>
 #include "gxDebug.h"
+#include "OSUtils.h"
+
+#if GEAR_ANDROID
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+#endif
+
 
 gxFile::gxFile()
 {
@@ -17,6 +24,7 @@ gxFile::~gxFile()
 bool gxFile::GetDataBuffer(const std::string& filename, std::string& buffer, long& size) {
     //read shader code
     size=0;
+#if GEAR_APPLE
     FILE* fp=fopen(filename.c_str(), "r");
     if(fp==NULL) {
         DEBUG_PRINT("FILE open ERROR %s", filename.c_str());
@@ -41,7 +49,7 @@ bool gxFile::GetDataBuffer(const std::string& filename, std::string& buffer, lon
     
     char* data=new char[size+1];
     if (!data) {
-        DEBUG_PRINT("GetDataBuffer() - data allocation ERROR #3", filename.c_str());
+        DEBUG_PRINT("GetDataBuffer() - data allocation ERROR #3 - %s", filename.c_str());
         fclose(fp);
         return false;
     }
@@ -53,15 +61,37 @@ bool gxFile::GetDataBuffer(const std::string& filename, std::string& buffer, lon
     buffer.assign(data, size);
     delete [] data;
     return true;
-}
-
-gxBufferFileReader* gxFile::GetDataBufferFile(const std::string& filename) {
-    long fileSz;
-    std::string data;
-    if (gxFile::GetDataBuffer(filename, data, fileSz)) {
-        return new gxBufferFileReader(data, fileSz);
+#elif GEAR_ANDROID
+    AAssetManager* mgr = OSUtils::cpp_getAssetManager();
+    AAsset* asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER);
+    if(!asset) {
+        DEBUG_PRINT("AAssetManager_open() - failed : %s", filename.c_str());
+        return false;
     }
-    return nullptr;
+    
+    size = (long)AAsset_getLength64(asset);
+    char* data=new char[size+1];
+    if (!data) {
+        DEBUG_PRINT("GetDataBuffer() - data allocation error - %s", filename.c_str());
+        AAsset_close(asset);
+        return false;
+    }
+    
+    if (AAsset_read(asset, data, size) < 0) {
+        delete [] data;
+        AAsset_close(asset);
+        DEBUG_PRINT("AAsset_read() - failed : %s", filename.c_str());
+        return false;
+    }
+    
+    AAsset_close(asset);
+    
+    data[size] = '\0';
+    buffer.assign(data, size);
+    delete [] data;
+    
+    return true;
+#endif
 }
 
 int gxFile::OpenFile(const std::string& filename, EFILEMODE eFileMode/* =FILE_r */)

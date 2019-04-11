@@ -82,9 +82,9 @@ void HWShaderManager::LoadDefaultShaders()
 #if defined(GEAR_WINDOWS)
 	resource_dir_root_path="res/shadersWin32/";
 #elif defined(GEAR_ANDROID)
-	resource_dir_root_path=OSUtils::cpp_getPath("/res/shadersWin32/");
+	resource_dir_root_path=OSUtils::cpp_getPath("res/shadersWin32/");
 #elif defined(GEAR_APPLE)
-    resource_dir_root_path=OSUtils::cpp_getPath("/res/shadersWin32/");
+    resource_dir_root_path=OSUtils::cpp_getPath("res/shadersWin32/");
 #else
 	DEBUG_PRINT("ERROR : Shaders not implemented for this platform ");
 	return;
@@ -186,9 +186,9 @@ gxHWShader* HWShaderManager::LoadShaderFromFile(const std::string& relativePath)
 #if defined(GEAR_WINDOWS)
 	resource_dir_root_path = "res/shadersWin32/";
 #elif defined(GEAR_ANDROID)
-	resource_dir_root_path = OSUtils::cpp_getPath("/res/shadersWin32/");
+	resource_dir_root_path = OSUtils::cpp_getPath("res/shadersWin32/");
 #elif defined(GEAR_APPLE)
-	resource_dir_root_path = OSUtils::cpp_getPath("/res/shadersWin32/");
+	resource_dir_root_path = OSUtils::cpp_getPath("res/shadersWin32/");
 #else
     #error ERROR : Shaders not implemented for this platform ";
 #endif
