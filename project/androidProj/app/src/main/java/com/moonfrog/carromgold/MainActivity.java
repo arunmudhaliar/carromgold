@@ -2,6 +2,7 @@ package com.moonfrog.carromgold;
 
 import com.moonfrog.carromgold.R;
 
+import android.app.ActionBar;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,18 +11,38 @@ import android.util.Log;
 import android.view.Menu;
 import android.content.Context;
 import android.content.res.AssetManager;
-
+import android.view.WindowManager;
+import android.os.Build;
 import java.io.File;
+import android.view.View;
 
 public class MainActivity extends NativeActivity {
 
-	public boolean firstlaunch=true;
+//	public boolean firstlaunch=true;
     private AssetManager assetManager;
     private static final String APP_NAME = "carromgold";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (Build.VERSION.SDK_INT < 16) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else {
+            View decorView = getWindow().getDecorView();
+            // Hide both the navigation bar and the status bar.
+            // SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+            // a general rule, you should design your app to hide the status bar whenever you
+            // hide the navigation bar.
+            int uiOptions = /*View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |*/ View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+            // Remember that you should never show the action bar if the
+            // status bar is hidden, so hide that too if necessary.
+            ActionBar actionBar = getActionBar();
+            actionBar.hide();
+        }
+
         Log.i(APP_NAME, "onCreate()");
         assetManager = getAssets();
 
