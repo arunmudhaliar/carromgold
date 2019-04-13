@@ -58,6 +58,9 @@ public:
     inline void SetTag(const std::string& tag) { this->tag = tag; }
     inline const std::string& GetTag() { return this->tag; }
     
+    inline void SetRBName(const std::string& name) { this->name = name; }
+    inline const std::string& GetRBName() { return this->name; }
+    
     void setDebugPos(vector2x p) { debugPos = p; }
     void TriggerCollisionEvent(std::vector<Collider*>& colliders) { OnCollision(colliders); }
     
@@ -69,6 +72,13 @@ public:
     
     void PhysicsUpdate();
     
+    void ActivatePhysics();
+    void DeactivatePhysics();
+    bool IsActiveRB() { return active; }
+    
+    const std::string ToString();
+    const long long AllAddForCheck();
+    
 protected:
     vector2x force;
     vector2x velocity;
@@ -79,9 +89,12 @@ protected:
     intx radiusSq;
     intx frictionFactor;
     std::string tag;
+    std::string name;
     vector2x debugPos;
     vector2x accumulatedVel;
     intx restitution;
+    bool active;
+    
     virtual void UpdatePositionFromRB(const vector2x& displacement) = 0;
     virtual void SetPositionFromRB(const vector2x& pos) = 0;
     virtual void OnCollision(std::vector<Collider*>& colliders) = 0;

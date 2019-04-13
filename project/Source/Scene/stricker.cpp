@@ -41,7 +41,9 @@ Stricker::Stricker() : Ball() {
 Stricker::~Stricker() {
 }
 
-void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
+void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager,
+                            SoundEngine* soundEnginePtr, const std::string& name, MStrickerObserver* observer) {
+    this->observer = observer;
     this->strickerSprite.setOffset(0.0f, 0.0f);
     this->strickerSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Sticker.png").c_str());
     
@@ -74,7 +76,26 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     this->initBall(size, mass, frictionfactor, pos, &this->strickerSprite, soundEnginePtr);
     this->SetColor(0.5f, 0.58f, 0.4f);
     this->SetTag("Stricker");
+    this->SetRBName(name);
     this->SetRestituition(367);   //=FTOX(0.09f)
+}
+
+void Stricker::SetStrickerPosition(const vector2x& pos) {
+    SetRBPosition(pos, true);
+    this->moveToolSprite.setPositionx(pos);
+    this->directionSprite.setPositionx(pos);
+}
+
+void Stricker::Remote_SetGrabbed(bool flag) {
+    this->SetGrabed(flag);
+}
+
+void Stricker::Remote_SetAimMode(bool flag) {
+    this->SetAimMode(flag);
+}
+
+void Stricker::Remote_SetMoveMode(bool flag) {
+    this->SetMoveMode(flag);
 }
 
 void Stricker::OnPostInitBall() {
@@ -806,6 +827,9 @@ void Stricker::Cmd_PlaceStricker() {
     auto strickerPos = this->GetRBPosition();
     this->moveToolSprite.setPos(XTOF(strickerPos.x), XTOF(strickerPos.y));
     this->SetMoveArrowPositions(strickerPos);
+    if (this->observer) {
+        this->observer->OnStricker_StateChangeTo_PlaceStricker(this);
+    }
 }
 
 void Stricker::Cmd_TryGrab(const vector2x& pos) {
@@ -838,9 +862,8 @@ void Stricker::Cmd_TryShoot(const vector2x& pos, std::function<void()> callback)
     this->inputCurrentPos = pos;
     
     if (this->inputIsAim) {
-        this->Cmd_TryShoot();
+        this->Fire();
         callback();
-        
     }
     
     this->SetGrabed(false);
@@ -869,7 +892,7 @@ void Stricker::MoveStricker(intx fixedDT, Ball& ball, vector2x& delta) {
     ball.SetRBPosition(position);
 }
 
-void Stricker::Cmd_TryShoot() {
+void Stricker::Fire() {
     auto vel = GetRBVelocity();
     auto strickerPos = GetRBPosition();
     
@@ -895,6 +918,7 @@ void Stricker::Cmd_TryShoot() {
     scaled_diff = MIN(scaled_diff, MAX_ALLOWED_POWER);
     //    DEBUG_PRINT("scaled_diff %d", XTOI(scaled_diff));
     //    scaled_diff = FTOX(40000);
+    SetRBVelocity(vector2x());
     AddForce(diffStartToCurrent*scaled_diff);
     if (observer) {
         observer->OnStricker_StateChangeTo_Shoot(this);

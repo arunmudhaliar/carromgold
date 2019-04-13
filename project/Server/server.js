@@ -65,14 +65,26 @@ class Room {
 
   startGame() {
     console.log("startGame for room "+this.name);
-    this._first.send("startgame");
-    this._second.send("startgame");
+    var cmd_startgame = {};
+    cmd_startgame['cmd'] = {};
+    cmd_startgame['cmd']['id'] = 'startgame';
+    var jcmd = JSON.stringify(cmd_startgame);
+    this._first.send(jcmd);
+    this._second.send(jcmd);
   }
 
   initGame() {
     console.log("initGame for room "+this.name);
-    this._first.send("first");
-    this._second.send("second");
+    var cmd_first = {};
+    cmd_first['cmd'] = {};
+    cmd_first['cmd']['id'] = 'playerid';
+    cmd_first['cmd']['value'] = 'first';
+    var cmd_second = {};
+    cmd_second['cmd'] = {};
+    cmd_second['cmd']['id'] = 'playerid';
+    cmd_second['cmd']['value'] = 'second';
+    this._first.send(JSON.stringify(cmd_first));
+    this._second.send(JSON.stringify(cmd_second));
   }
 
   sendScoreUpdate() {
@@ -84,14 +96,19 @@ class Room {
 
   stopGame(connection) {
     console.log("stopGame for room "+this.name);
+    var cmd_stopgame = {};
+    cmd_stopgame['cmd'] = {};
+    cmd_stopgame['cmd']['id'] = 'stopgame';
+    var jcmd = JSON.stringify(cmd_stopgame);
+
     if (connection != this._first) {
       if (this._first) {
-        this._first.send("stopgame");
+        this._first.send(jcmd);
         this._first.close();
       }
     } else {
       if (this._second) {
-        this._second.send("stopgame");
+        this._second.send(jcmd);
         this._second.close();
       }
     }
@@ -191,16 +208,19 @@ function stopGame(connection) {
 }
 
 function messagePass(connection, msg) {
+  console.log('===> '+ msg);
+  var jobj = JSON.parse(msg);
+  var cmdID = jobj['cmd']['id'];
   for (i=0;i<rooms.length;i++) {
     var playerID = rooms[i].isMemberOfThisRoom(getIP(connection))
     if (playerID > 0) {
       if (playerID == 1) {
-        if (msg == "ping_akn") {
+        if (cmdID == "ping_akn") {
           rooms[i]._pingAknReceivedFromFirst = 1;
           if (rooms[i]._pingAknReceivedFromSecond) {
             rooms[i].startGame();
           }
-        } else if (msg == "goal") {
+        } else if (cmdID == "goal") {
           rooms[i]._secondScore++;
           rooms[i].sendScoreUpdate();
         } else {
@@ -209,12 +229,12 @@ function messagePass(connection, msg) {
           }
         }
       } else if (playerID == 2) {
-        if (msg == "ping_akn") {
+        if (cmdID == "ping_akn") {
           rooms[i]._pingAknReceivedFromSecond = 1;
           if (rooms[i]._pingAknReceivedFromFirst) {
             rooms[i].startGame();
           }
-        } else if (msg == "goal") {
+        } else if (cmdID == "goal") {
           rooms[i]._firstScore++;
           rooms[i].sendScoreUpdate();
         } else {

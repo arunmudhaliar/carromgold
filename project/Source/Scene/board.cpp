@@ -8,6 +8,7 @@
 
 #include "board.hpp"
 #include "../GUI/OSUtils.h"
+#include "../Physics/core/util.h"
 
 #define BOTTOM_TOP_WALL_HEIGHTx  ITOX(40)
 #define LEFT_RIGHT_WALL_WIDTHx  ITOX(40)
@@ -33,12 +34,12 @@ Board::~Board() {
     this->coins.clear();
 }
 
-void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManager, SoundEngine* soundEnginePtr) {
+void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManager
+                      , SoundEngine* soundEnginePtr, MStrickerObserver* observer) {
     this->soundEnginePtr = soundEnginePtr;
     this->bgSprite.setOffset(0, 0);
     this->bgSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/bg.png").c_str());
     this->bgSprite.setScale(viewPort.x/bgSprite.getClipWidth(), viewPort.y/bgSprite.getClipHeight());
-    
     
     this->boardSprite.setOffset(0, 0);
     this->boardSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/CarromBoard_1.png").c_str());
@@ -50,35 +51,38 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     this->queenSprite.setOffset(0.0f, 0.0f);
     this->queenSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/RedP.png").c_str());
     
-    // stricker
+    // stricker default position
+    // Note: This is default stricker position.
+    // But it will change according to the player type after player identification from server
     vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
     vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
     strickerPos.y=0;
     strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(0.172f));
-    playerStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), leftOriginPosx+strickerPos, textureManager, this->soundEnginePtr);
+    this->bottomStrickerInitPosition = leftOriginPosx+strickerPos;
+    this->playerStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), this->bottomStrickerInitPosition,
+                                      textureManager, this->soundEnginePtr, "P", observer);
+    
+    strickerPos = BOARD_SIZEx*FTOX(0.5f);
+    strickerPos.y=0;
+    strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(1.0f-0.172f));
+    this->topStrickerInitPosition = leftOriginPosx+strickerPos;
+    this->opponentStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), this->topStrickerInitPosition,
+                                        textureManager, this->soundEnginePtr, "O", observer);
+    //
     
     this->SetGameState(GAME_INIT);
 #if !ENABLE_MULTIPLAYER
     this->SetGameState(GAME_START);
 #endif
-//    // TODO : need to set from the network data.
-////    this->boardMatrix.setRotationMatrix(180, 0, 0, true);
-//    this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
-//    this->boardMatrixInv = this->boardMatrix.getInverse();
+}
+
+bool Board::IsPlayerStricker(Stricker* stricker) {
+    return (stricker == &playerStricker);
 }
 
 void Board::UpdateBoard() {
     if (this->gameState >= GAME_START && this->gameState < GAME_RESET) {
         physicsSolver.UpdateSolver();
-        
-        if (this->gameState==GAME_PLAYER_FIRE && this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
-            vector2x strickerPos = BOARD_SIZEx*FTOX(0.5f);
-            strickerPos.y=0;
-            strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(0.172f));
-            vector2x leftOriginPosx=-(BOARD_SIZEx*FTOX(0.5f));
-            playerStricker.SetRBPosition(leftOriginPosx+strickerPos, true);
-            SetGameState(GAME_PLAYER_PLACE_STRICKER);
-        }
     }
 }
 
@@ -88,7 +92,9 @@ void Board::OnFixedUpdate(intx fixedDT) {
         
         if (this->gameState == GAME_PLAYER_PLACE_STRICKER) {
             // stricker update
-            this->playerStricker.UpdateStricker(fixedDT);
+            if (this->IsMyTurn()) {
+                this->playerStricker.UpdateStricker(fixedDT);
+            }
         } else if (this->gameState == GAME_PLAYER_FIRE) {
             std::vector<int> removeCoins;
             for(auto c : this->coins) {
@@ -113,9 +119,25 @@ void Board::OnFixedUpdate(intx fixedDT) {
                 this->physicsSolver.RemoveRigidBody(rb);
                 this->coins.erase(this->coins.find(c));
                 GX_DELETE(rb);
+                DEBUG_PRINT("===== Pocketed =====");
+            }
+            
+            if (this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
+                SetGameState(GAME_PLAYER_PLACE_STRICKER);
             }
         }
     }
+}
+
+void Board::StopAllCoins() {
+    for (auto c : this->coins) {
+        c.second->SetRBVelocity(vector2x());
+        c.second->ClearForce();
+    }
+    this->playerStricker.ClearForce();
+    this->playerStricker.SetRBVelocity(vector2x());
+    this->opponentStricker.ClearForce();
+    this->opponentStricker.SetRBVelocity(vector2x());
 }
 
 void Board::DrawBoard(const matrix4x4f& viewProjection) {
@@ -123,10 +145,14 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
 #if USE_ProgrammablePipeLine
     auto guishader = HWShaderManager::GetHWShaderManager().GetHWShader(2);
     
+    bool canDrawBoard = this->CanShowBoard();
+    
     // bg
     guishader->enableProgram();
     bgSprite.draw(guishader, viewProjection);
-    boardSprite.draw(guishader, mvp);
+    if (canDrawBoard) {
+        boardSprite.draw(guishader, mvp);
+    }
     guishader->disableProgram();
 #else
     boardSprite.draw();
@@ -140,29 +166,45 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
 //    directionSprite.draw();
 //#endif
     
-    // render objects here
-    if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
-        this->playerStricker.DrawPreHelperSprites(mvp);
-    }
-    playerStricker.draw(mvp);
-    if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
-        this->playerStricker.DrawPostHelperSprites(mvp);
-    }
+    if (canDrawBoard) {
+        // render objects here
+        if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
+            if (this->IsMyTurn()) {
+                this->playerStricker.DrawPreHelperSprites(mvp);
+            } else {
+                this->opponentStricker.DrawPreHelperSprites(mvp);
+            }
+        }
+        
+        if (this->IsMyTurn()) {
+            playerStricker.draw(mvp);
+        } else {
+            opponentStricker.draw(mvp);
+        }
+        
+        if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
+            if (this->IsMyTurn()) {
+                this->playerStricker.DrawPostHelperSprites(mvp);
+            } else {
+                this->opponentStricker.DrawPostHelperSprites(mvp);
+            }
+        }
     
-    ground.draw(mvp);
-    leftWall.draw(mvp);
-    rightWall.draw(mvp);
-    topWall.draw(mvp);
-    
-    for(auto c : coins) {
-        c.second->draw(mvp);
+        ground.draw(mvp);
+        leftWall.draw(mvp);
+        rightWall.draw(mvp);
+        topWall.draw(mvp);
+        
+        for(auto c : coins) {
+            c.second->draw(mvp);
+        }
+        
+        //holes
+        holes[0].draw(mvp);
+        holes[1].draw(mvp);
+        holes[2].draw(mvp);
+        holes[3].draw(mvp);
     }
-    
-    //holes
-    holes[0].draw(mvp);
-    holes[1].draw(mvp);
-    holes[2].draw(mvp);
-    holes[3].draw(mvp);
 }
 
 void Board::TryStartGame() {
@@ -190,10 +232,14 @@ void Board::TryTurnOpponent(bool force/* = false*/) {
 }
 
 void Board::OnPlayerTurn() {
+    this->playerStricker.ActivatePhysics();
+    this->opponentStricker.DeactivatePhysics();
     this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
 }
 
 void Board::OnOpponentTurn() {
+    this->playerStricker.DeactivatePhysics();
+    this->opponentStricker.ActivatePhysics();
     this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
 }
 
@@ -254,7 +300,8 @@ void Board::OnGameInit() {
     holes[2].initHole(ITOX(24), leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), ITOX(36)));
     holes[3].initHole(ITOX(24), leftOriginPosx + vector2x(BOARD_SIZEx.x-ITOX(36), BOARD_SIZEx.y-ITOX(36)));
     
-    physicsSolver.AddRigidBody(&playerStricker);
+//    physicsSolver.AddRigidBody(&playerStricker);
+//    physicsSolver.AddRigidBody(&opponentStricker);
     
     ResetCoins();
     
@@ -285,6 +332,7 @@ void Board::ResetCoins() {
     queenBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center, &this->queenSprite, this->soundEnginePtr);
     queenBall->SetColor(0.75f, 0, 0.2f);
     queenBall->SetTag("Queen");
+    queenBall->SetRBName(util::stringFormat("c%d", ballId));
     queenBall->SetRestituition(restituition);
     this->coins[ballId++] = queenBall;
     physicsSolver.AddRigidBody(queenBall);
@@ -304,6 +352,7 @@ void Board::ResetCoins() {
             newBall->SetColor(0.7f, 0.7f, 0.7f);
         }
         newBall->SetTag("Coin");
+        newBall->SetRBName(util::stringFormat("c%d", ballId));
         newBall->SetRestituition(restituition);
         this->coins[ballId++] = newBall;
         physicsSolver.AddRigidBody(newBall);
@@ -326,6 +375,7 @@ void Board::ResetCoins() {
             newBall->SetColor(0.7f, 0.7f, 0.7f);
         }
         newBall->SetTag("Coin");
+        newBall->SetRBName(util::stringFormat("c%d", ballId));
         newBall->SetRestituition(restituition);
         this->coins[ballId++] = newBall;
         physicsSolver.AddRigidBody(newBall);
@@ -333,8 +383,18 @@ void Board::ResetCoins() {
 }
 
 void Board::OnGameStart() {
+    this->physicsSolver.ResetTimeVals();
+    
     switch (this->playerType) {
         case PLAYER_FIRST: {
+            this->playerStricker.SetStrickerPosition(this->bottomStrickerInitPosition);
+            this->opponentStricker.SetStrickerPosition(this->topStrickerInitPosition);
+            physicsSolver.AddRigidBody(&playerStricker);
+            physicsSolver.AddRigidBody(&opponentStricker);
+            playerStricker.DeactivatePhysics();
+            opponentStricker.DeactivatePhysics();
+            
+            this->boardMatrix.identity();
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
             this->TryTurnPlayer(true);
@@ -342,6 +402,14 @@ void Board::OnGameStart() {
         break;
             
         case PLAYER_SECOND: {
+            this->playerStricker.SetStrickerPosition(this->topStrickerInitPosition);
+            this->opponentStricker.SetStrickerPosition(this->bottomStrickerInitPosition);
+            physicsSolver.AddRigidBody(&opponentStricker);
+            physicsSolver.AddRigidBody(&playerStricker);
+            playerStricker.DeactivatePhysics();
+            opponentStricker.DeactivatePhysics();
+            
+            this->boardMatrix.identity();
             this->boardMatrix.setRotationMatrix(180, 0, 0, true);
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
@@ -349,6 +417,14 @@ void Board::OnGameStart() {
         }
         break;
         default: {
+            this->playerStricker.SetStrickerPosition(this->bottomStrickerInitPosition);
+            this->opponentStricker.SetStrickerPosition(this->topStrickerInitPosition);
+            physicsSolver.AddRigidBody(&playerStricker);
+            physicsSolver.AddRigidBody(&opponentStricker);
+            playerStricker.DeactivatePhysics();
+            opponentStricker.DeactivatePhysics();
+            
+            this->boardMatrix.identity();
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
             this->TryTurnPlayer(true);
@@ -357,9 +433,17 @@ void Board::OnGameStart() {
     }
 }
 
-
 void Board::OnGamePlayerPlaceStricker() {
-    this->playerStricker.Cmd_PlaceStricker();
+    StopAllCoins();
+    if (this->IsMyTurn()) {
+        DEBUG_PRINT("========== PLACE STRICKER ==========");
+        this->playerStricker.SetRBPosition(this->playerType==PLAYER_FIRST?this->bottomStrickerInitPosition:this->topStrickerInitPosition, true);
+        this->playerStricker.Cmd_PlaceStricker();
+    } else {
+        DEBUG_PRINT("========== Opponent PLACE STRICKER ==========");
+        this->opponentStricker.SetRBPosition(this->playerType==PLAYER_FIRST?this->topStrickerInitPosition:this->bottomStrickerInitPosition, true);
+        this->opponentStricker.Cmd_PlaceStricker();
+    }
 }
 
 void Board::OnGamePlayerPlaceAim() {
@@ -374,18 +458,26 @@ void Board::OnGameReset() {
 }
 
 void Board::MouseBtnUp(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
         return;
     }
     
     auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
-    this->playerStricker.Cmd_TryShoot(transformedPos, [this](){
+    this->playerStricker.Cmd_TryShoot(transformedPos, [this]() {
+        
+        // No need for this since all coins are reseted on setting turns.
+//        for(auto c : this->coins) {
+//            c.second->SetRBVelocity(vector2x());
+//            c.second->ClearForce();
+//        }
+        this->physicsSolver.ResetTimeVals();
+        DEBUG_PRINT("========== SHOOT ==========");
         this->SetGameState(GAME_PLAYER_FIRE);
     });
 }
 
 void Board::MouseBtnDown(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
         return;
     }
     
@@ -394,9 +486,28 @@ void Board::MouseBtnDown(const vector2x& pos) {
 }
 
 void Board::MouseMove(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET)) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
         return;
     }
     auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));
     this->playerStricker.Cmd_TryMove(transformedPos);
+}
+
+
+void Board::Remote_Fire(const vector2x& force) {
+    this->opponentStricker.SetRBVelocity(vector2x());
+    this->opponentStricker.ClearForce();
+    this->opponentStricker.AddForce(force);
+    
+    // No need for this since all coins are reseted on setting turns.
+//    for(auto c : this->coins) {
+//        c.second->SetRBVelocity(vector2x());
+//        c.second->ClearForce();
+//    }
+    this->opponentStricker.Remote_SetGrabbed(false);
+    this->opponentStricker.Remote_SetAimMode(false);
+    this->opponentStricker.Remote_SetMoveMode(false);
+    this->physicsSolver.ResetTimeVals();
+    DEBUG_PRINT("========== Remote SHOOT ==========");
+    this->SetGameState(GAME_PLAYER_FIRE);
 }

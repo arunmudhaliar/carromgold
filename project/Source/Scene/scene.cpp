@@ -18,6 +18,10 @@
 #include "../Physics/core/Timer.h"
 #include "../Physics/core/util.h"
 #include "../GUI/OSUtils.h"
+#include "../nlohmann/json.hpp"
+#include "../sha256/sha256.h"
+
+using njson = nlohmann::json;
 
 Scene& Scene::GetInstance() {
     static Scene instance;
@@ -75,13 +79,13 @@ void Scene::InitScene(float cx, float cy) {
         }
     }
     
-    board.InitBoard(vector2i(cx, cy), textureManager, &this->soundEngine);
+    board.InitBoard(vector2i(cx, cy), textureManager, &this->soundEngine, this);
     
     
-#if SHOW_DEBUG_PANEL
-    // DEBUG PANEL
     float btn_width = 200.0f;
     float btn_height = 80.0f;
+#if SHOW_DEBUG_PANEL
+    // DEBUG PANEL
     debugButton1.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test1", [this](){
         this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION1);
     });
@@ -97,6 +101,13 @@ void Scene::InitScene(float cx, float cy) {
     debugBtnList.push_back(&debugButton2);
     debugBtnList.push_back(&debugButton3);
 #endif
+    
+    //sha
+//    debugButton4
+    debugButton4.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.4f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "shacheck", [this](){
+        this->CheckShas();
+    });
+    debugBtnList.push_back(&debugButton4);
     
 #if ENABLE_MULTIPLAYER
     NetworkManager::GetInstance().InitNetwork(this);
@@ -183,6 +194,8 @@ void Scene::Render() {
         b->drawButton(*renderer.getViewProjectionMatrix());
     }
     //
+#else
+    debugButton4.drawButton(*renderer.getViewProjectionMatrix());
 #endif
     
 #if !USE_ProgrammablePipeLine
@@ -213,9 +226,23 @@ void Scene::DrawStats() {
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("ELAPSED %lu ms", this->physicsSolver.GetElapsedTime()).c_str(), 45, -(60+(iterator++)*20), 200);
     geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), 20, yOffset + ++iterator*20, 200);
     
-    geFontManager::g_pFontArial10_84Ptr->drawString(this->board.IsMyTurn()?"YOUR TURN":"OPPONENTS TURN", windowSize.x*0.5f, yOffset + iterator*20, 200, true);
+    if (this->board.CanShowBoard()) {
+        geFontManager::g_pFontArial10_84Ptr->drawString(this->board.IsMyTurn()?"YOUR TURN":"OPPONENTS TURN", windowSize.x*0.5f, yOffset + iterator*20, 200, true);
+    }
     
-    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("FPS : %3.2f", Timer::getFPS()).c_str(), 20, windowSize.y*0.94f, 200);
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                    util::stringFormat("FPS : %3.2f", Timer::getFPS()).c_str(), 20, windowSize.y*0.94f, 200);
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                    util::stringFormat("ELAPSED : %lu", this->board.GetPhysicsSolver().GetElapsedTime()).c_str(), 20, windowSize.y*0.92f, 200);
+
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                                                    util::stringFormat("SHA : %s", this->sha256Str.c_str()).c_str(), 20, windowSize.y*0.90f, 500);
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                                                    util::stringFormat("==>SHA : %s", this->sha256Str_incoming.c_str()).c_str(), 20, windowSize.y*0.88f, 500);
+
+//    geFontManager::g_pFontArial10_84Ptr->drawString(
+//                                                    util::stringFormat("<<<< : %s", this->debugShootValReceived.c_str()).c_str(), 20, windowSize.y*0.88f, 500);
+
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("BALL VEL : %d", XTOI(this->ball.GetRBVelocity().lengthx())).c_str(), 45, -(60+(iterator++)*20), 200);
 
 //        geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("PLAYER 1: %s", player1Score.c_str()).c_str(), 0, 0, 200);
@@ -289,108 +316,111 @@ void Scene::SendPing() {
 
 #if ENABLE_MULTIPLAYER
 void Scene::OnNetworkMessage(const std::string& msg) {
-//#if 0
-//    printf("Msg from other player %s\n", msg.c_str());
+    auto jobj = njson::parse(msg);
+    auto isCommand = jobj.contains("cmd");
+    if (!isCommand) {
+        printf("Invalid incoming msg %s", msg.c_str());
+        return;
+    }
+    
+    auto jcmd = jobj["cmd"];
+    if (!jcmd.contains("id")) {
+        printf("Invalid incoming msg %s", msg.c_str());
+        return;
+    }
+    
+    auto jcmdID = jcmd["id"];
+    DEBUG_PRINT("===> json jcmdID:%s", jcmdID.get<std::string>().c_str());
+    
     auto gameState = this->board.GetBoardState();
-    if (msg == "first" || msg == "second") {
+    if (jcmdID == "playerid") {
         if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
-//            this->physicsSolver.RemoveBoxCollider(&player1);
-//            this->physicsSolver.RemoveBoxCollider(&player2);
-            if (msg == "first") {
+            auto jcmdValue = jcmd["value"];
+            //            this->physicsSolver.RemoveBoxCollider(&player1);
+            //            this->physicsSolver.RemoveBoxCollider(&player2);
+            if (jcmdValue == "first") {
                 this->board.SetPlayerType(Board::PLAYER_FIRST);
-//                this->physicsSolver.AddBoxCollider(&player1);
-            } else if (msg == "second") {
+                //                this->physicsSolver.AddBoxCollider(&player1);
+            } else if (jcmdValue == "second") {
                 this->board.SetPlayerType(Board::PLAYER_SECOND);
-//                this->physicsSolver.AddBoxCollider(&player2);
+                //                this->physicsSolver.AddBoxCollider(&player2);
             }
-            NetworkManager::GetInstance().SendMessage("ping");
-//            pingTimeFromOtherPlayer = 0;
-//            pingStartTime = Timer::getCurrentTimeInMilliSec();
+            
+            njson j;
+            j["cmd"]["id"] = "ping";
+            NetworkManager::GetInstance().SendMessage(j.dump());
+            //            pingTimeFromOtherPlayer = 0;
+            //            pingStartTime = Timer::getCurrentTimeInMilliSec();
         }
-    } else if (msg == "ping") {
-//        pingTimeFromOtherPlayer = Timer::getCurrentTimeInMilliSec()-pingStartTime;
-//        printf("PING TIME %lu ms.\n", pingTimeFromOtherPlayer);
+    } else if (jcmdID == "ping") {
+        //        pingTimeFromOtherPlayer = Timer::getCurrentTimeInMilliSec()-pingStartTime;
+        //        printf("PING TIME %lu ms.\n", pingTimeFromOtherPlayer);
         if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
-            NetworkManager::GetInstance().SendMessage("ping_akn");
+            njson j;
+            j["cmd"]["id"] = "ping_akn";
+            NetworkManager::GetInstance().SendMessage(j.dump());
         }
-    } else if (msg == "startgame") {
+    } else if (jcmdID == "startgame") {
         if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
             this->board.TryStartGame();
         }
-    }
-    
-    /*else if (msg == "boost") {
-        ApplyBoost(0, 0);
-    } else {
-        std::vector<std::string> lines;
-        util::splitString(msg, lines);
-        if (lines.size()) {
-            if (lines[0] == "ball" && lines.size()==2) {
-                std::vector<std::string> args;
-                util::splitString(lines[1], args, ',');
-                if (args.size()==4) {
-                    intx px = atoi(args[0].c_str());
-                    intx py = atoi(args[1].c_str());
-                    intx vx = atoi(args[2].c_str());
-                    intx vy = atoi(args[3].c_str());
-                    
-                    this->stricker.SetRBVelocity(vector2x(vx, vy));
-                    this->stricker.SetRBPosition(vector2x(px, py));
-                }
-            } else if (lines[0] == "stricker" && lines.size()==2) {
-                std::vector<std::string> args;
-                util::splitString(lines[1], args, ',');
-                if (args.size()==2) {
-                    intx fx = atoi(args[0].c_str());
-                    intx fy = atoi(args[1].c_str());
-                    this->stricker.AddForce(vector2x(fx, fy));
-                }
-            }
-//            else if (lines[0] == "stricker_up" && lines.size()==4) {
-//                int val = atoi(lines[1].c_str());
-//                this->remoteInputMoveUp = (val==1);
-//                std::vector<std::string> args;
-//                util::splitString(lines[2], args, ',');
-//                if (args.size()==2) {
-//                    intx px = atoi(args[0].c_str());
-//                    intx py = atoi(args[1].c_str());
-//                    if (this->playerType == PLAYER_FIRST) {
-//                        this->player2.SetPosition(vector2x(px, py));
-//                    } else if (this->playerType == PLAYER_SECOND) {
-//                        this->player1.SetPosition(vector2x(px, py));
-//                    }
-//                }
-//                unsigned long remoteElapsedTime = atol(lines[3].c_str());
-//                remoteElapsedTime;
-//            } else if (lines[0] == "stricker_down" && lines.size()==4) {
-//                int val = atoi(lines[1].c_str());
-//                this->remoteInputMoveDown = (val==1);
-//                std::vector<std::string> args;
-//                util::splitString(lines[2], args, ',');
-//                if (args.size()==2) {
-//                    intx px = atoi(args[0].c_str());
-//                    intx py = atoi(args[1].c_str());
-//                    if (this->playerType == PLAYER_FIRST) {
-//                        this->player2.SetPosition(vector2x(px, py));
-//                    } else if (this->playerType == PLAYER_SECOND) {
-//                        this->player1.SetPosition(vector2x(px, py));
-//                    }
-//                }
-//                unsigned long remoteElapsedTime = atol(lines[3].c_str());
-//                remoteElapsedTime;
-//            }
-            else if (lines[0] == "score" && lines.size()==2) {
-                std::vector<std::string> args;
-                util::splitString(lines[1], args, ',');
-                if (args.size()==2) {
-                    player1Score = args[0];
-                    player2Score = args[1];
-                }
+    } else if (jcmdID == "tograb") {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+            auto jcmdValue = jcmd["value"];
+            auto px = jcmdValue["px"];
+            auto py = jcmdValue["py"];
+            intx pxv = px.get<intx>();
+            intx pyv = py.get<intx>();
+            this->board.GetOpponentStricker().SetStrickerPosition(vector2x(pxv, pyv));
+            this->board.GetOpponentStricker().Remote_SetGrabbed(true);
+        }
+    } else if (jcmdID == "tomove") {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+            auto jcmdValue = jcmd["value"];
+            auto px = jcmdValue["px"];
+            auto py = jcmdValue["py"];
+            intx pxv = px.get<intx>();
+            intx pyv = py.get<intx>();
+            this->board.GetOpponentStricker().SetStrickerPosition(vector2x(pxv, pyv));
+            this->board.GetOpponentStricker().Remote_SetMoveMode(true);
+        }
+    } else if (jcmdID == "toaim") {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+            auto jcmdValue = jcmd["value"];
+            auto px = jcmdValue["px"];
+            auto py = jcmdValue["py"];
+            intx pxv = px.get<intx>();
+            intx pyv = py.get<intx>();
+            this->board.GetOpponentStricker().SetStrickerPosition(vector2x(pxv, pyv));
+            this->board.GetOpponentStricker().Remote_SetAimMode(true);
+        }
+    } else if (jcmdID == "toshoot") {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+            this->debugShootValReceived = jobj.dump();
+            auto jcmdValue = jcmd["value"];
+            auto px = jcmdValue["px"];
+            auto py = jcmdValue["py"];
+            auto fx = jcmdValue["fx"];
+            auto fy = jcmdValue["fy"];
+            intx pxv = px.get<intx>();
+            intx pyv = py.get<intx>();
+            intx fxv = fx.get<intx>();
+            intx fyv = fy.get<intx>();
+            this->board.GetOpponentStricker().SetStrickerPosition(vector2x(pxv, pyv));
+            this->board.Remote_Fire(vector2x(fxv, fyv));
+        }
+    } else if (jcmdID == "sha") {
+        auto jcmdValue = jcmd["value"];
+        this->sha256Str_incoming = jcmdValue.get<std::string>();
+        this->sha256Array_incoming.clear();
+        if (jcmd.contains("array")) {
+            auto jcmdArray = jcmd["array"];
+            for (int x=0;x<jcmdArray.size();x++) {
+                auto data = jcmdArray[x].get<std::string>();
+                this->sha256Array_incoming.push_back(data);
             }
         }
     }
-     */
-//#endif
 }
 
 void Scene::OnNetworkFail() {
@@ -405,5 +435,144 @@ void Scene::OnNetworkOpen() {
 void Scene::OnNetworkClose() {
     statusMsg = "DISCONECTED";
 //    SetGameState(GAME_RESET);
+}
+    
+// Stricker
+void Scene::OnStricker_StateChangeTo_Grab(Stricker* stricker) {
+    if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
+        return;
+    }
+    if (this->board.IsPlayerStricker(stricker)) {
+        auto strickerPos = stricker->GetRBPosition();
+        njson j;
+        j["cmd"]["id"] = "tograb";
+        j["cmd"]["value"]["px"] = strickerPos.x;
+        j["cmd"]["value"]["py"] = strickerPos.y;
+        DEBUG_PRINT("<=== json %s", j.dump().c_str());
+        NetworkManager::GetInstance().SendMessage(j.dump());
+    }
+}
+
+void Scene::OnStricker_StateChangeTo_Aim(Stricker* stricker) {
+    if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
+        return;
+    }
+    if (this->board.IsPlayerStricker(stricker)) {
+        auto strickerPos = stricker->GetRBPosition();
+        njson j;
+        j["cmd"]["id"] = "toaim";
+        j["cmd"]["value"]["px"] = strickerPos.x;
+        j["cmd"]["value"]["py"] = strickerPos.y;
+        DEBUG_PRINT("<=== json %s", j.dump().c_str());
+        NetworkManager::GetInstance().SendMessage(j.dump());
+    }
+}
+
+void Scene::OnStricker_StateChangeTo_Move(Stricker* stricker) {
+    if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
+        return;
+    }
+    if (this->board.IsPlayerStricker(stricker)) {
+        auto strickerPos = stricker->GetRBPosition();
+        njson j;
+        j["cmd"]["id"] = "tomove";
+        j["cmd"]["value"]["px"] = strickerPos.x;
+        j["cmd"]["value"]["py"] = strickerPos.y;
+        DEBUG_PRINT("<=== json %s", j.dump().c_str());
+        NetworkManager::GetInstance().SendMessage(j.dump());
+    }
+}
+
+void Scene::OnStricker_StateChangeTo_Shoot(Stricker* stricker) {
+    if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
+        return;
+    }
+    if (this->board.IsPlayerStricker(stricker)) {
+        auto strickerPos = stricker->GetRBPosition();
+        auto strickerForce = stricker->GetRBForce();
+        njson j;
+        j["cmd"]["id"] = "toshoot";
+        j["cmd"]["value"]["px"] = strickerPos.x;
+        j["cmd"]["value"]["py"] = strickerPos.y;
+        j["cmd"]["value"]["fx"] = strickerForce.x;
+        j["cmd"]["value"]["fy"] = strickerForce.y;
+        DEBUG_PRINT("<=== json %s", j.dump().c_str());
+        this->debugShootValSend = j.dump();
+        NetworkManager::GetInstance().SendMessage(j.dump());
+    }
+}
+
+void Scene::OnStricker_StateChangeTo_PlaceStricker(Stricker* stricker) {
+    if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
+        return;
+    }
+    
+    this->sha256Source = "";
+    this->sha256Str = "";
+    this->sha256Array.clear();
+    std::stringstream s;
+    auto jsonarray = njson::array();
+    for(auto c : this->board.GetCoins()) {
+        auto data = c.second->ToString();
+        s << data;
+        //        jsonarray.push_back(data);
+        //        sha256Array.push_back(data);
+    }
+    sha256Source = s.str();
+    sha256Str = sha256(sha256Source);
+    DEBUG_PRINT("sha256 - %s", sha256Str.c_str());
+    
+//    if (this->board.IsPlayerStricker(stricker)) {
+        njson j;
+        j["cmd"]["id"] = "sha";
+        j["cmd"]["value"] = sha256Str;
+        j["cmd"]["array"] = jsonarray;
+        auto jdump = j.dump();
+        NetworkManager::GetInstance().SendMessage(jdump);
+//    }
+}
+    
+void Scene::OnStricker_Move(Stricker* stricker) {
+    
+}
+
+void Scene::OnStricker_Aim(Stricker* stricker) {
+    
+}
+    
+    
+bool Scene::CheckShas() {
+    if (sha256Str_incoming != sha256Str) {
+        DEBUG_PRINT("!!!!!!!!!!!!! SHA MISMATCH !!!!!!!!!!!!!");
+        int arraySZ = (int)MIN(sha256Array.size(), sha256Array_incoming.size());
+        int reminderSZ = 0;
+        if (sha256Array.size()!=sha256Array_incoming.size()) {
+            DEBUG_PRINT("ARRAY size mismatch src.sz:%d, remote.sz:%d", sha256Array.size(), sha256Array_incoming.size());
+            reminderSZ = (int)ABS(sha256Array.size() - sha256Array_incoming.size());
+        }
+        
+        for (int x=0;x<arraySZ;x++) {
+            if (sha256Array[x]!=sha256Array_incoming[x]) {
+                DEBUG_PRINT("SHA256 ERR LINE(%d) ===> %s", x, sha256Array_incoming[x].c_str());
+            }
+        }
+        
+        if (reminderSZ) {
+            std::vector<std::string>* ptr = nullptr;
+            if (sha256Array.size()>0) {
+                ptr = &sha256Array;
+            } else {
+                ptr = &sha256Array_incoming;
+            }
+            
+            DEBUG_PRINT("----REMINDER LINES----");
+            for (int x=reminderSZ;x<ptr->size();x++) {
+                DEBUG_PRINT(ptr->at(x).c_str());
+            }
+        }
+        return false;
+    }
+    
+    return true;
 }
 #endif

@@ -28,9 +28,9 @@
 
 #define SHOW_DEBUG_PANEL 0
 
-class Scene
+class Scene : protected MStrickerObserver
 #if ENABLE_MULTIPLAYER
-: protected NetworkManagerDelegate
+, protected NetworkManagerDelegate
 #endif
 {
 private:
@@ -77,13 +77,23 @@ protected:
     void OnNetworkClose() override;
 #endif
     
+    // Stricker observer
+    void OnStricker_StateChangeTo_Grab(Stricker*) override;
+    void OnStricker_StateChangeTo_Aim(Stricker*) override;
+    void OnStricker_StateChangeTo_Move(Stricker*) override;
+    void OnStricker_StateChangeTo_Shoot(Stricker*) override;
+    void OnStricker_Move(Stricker*) override;
+    void OnStricker_Aim(Stricker*) override;
+    void OnStricker_StateChangeTo_PlaceStricker(Stricker*) override;
+    
     void DrawStats();
     void SendPing();
     
 private:
     
     void InternalGLStates();
-
+    bool CheckShas();
+    
     // window
     vector2i windowSize;
 #if GEAR_APPLE
@@ -104,8 +114,11 @@ private:
     gxButton debugButton1;
     gxButton debugButton2;
     gxButton debugButton3;
-    std::vector<gxButton*> debugBtnList;
+    gxButton debugButton4;  //sha check
     
+    std::vector<gxButton*> debugBtnList;
+    std::string debugShootValSend;
+    std::string debugShootValReceived;
 
     //renderer
     matrix4x4f worldScale;
@@ -113,4 +126,13 @@ private:
     matrix4x4f projectionMatrix;
     matrix4x4f inverseTransformationMatrix;
     matrix4x4f viewProjectionMatrix;
+    
+    // checksum
+    std::vector<std::string> sha256Array;
+    std::string sha256Str;
+    std::string sha256Source;
+    
+    // incoming
+    std::vector<std::string> sha256Array_incoming;
+    std::string sha256Str_incoming;
 };

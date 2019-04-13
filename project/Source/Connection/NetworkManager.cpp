@@ -32,9 +32,9 @@ void NetworkManager::on_close(client* c, websocketpp::connection_hdl hdl) {
 // This message handler will be invoked once for each incoming message. It
 // prints the message and then sends a copy of the message back to the server.
 void NetworkManager::on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
-    std::cout << "on_message called with hdl: " << hdl.lock().get()
-    << " and message: " << msg->get_payload()
-    << std::endl;
+//    std::cout << "on_message called with hdl: " << hdl.lock().get()
+//    << " and message: " << msg->get_payload()
+//    << std::endl;
     
 //    websocketpp::lib::error_code ec;
 //    c->send(hdl, msg->get_payload(), msg->get_opcode(), ec);
@@ -68,9 +68,10 @@ void NetworkManager::InitNetwork(NetworkManagerDelegate* delegate) {
     std::string uri = "ws://127.0.0.1:3000";
     try {
         // Set logging to be pretty verbose (everything except message payloads)
-        c.set_access_channels(websocketpp::log::alevel::all);
-        c.clear_access_channels(websocketpp::log::alevel::frame_payload);
-        
+//        c.set_access_channels(websocketpp::log::alevel::all);
+//        c.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        c.set_access_channels(websocketpp::log::alevel::none);
+        c.clear_access_channels(websocketpp::log::alevel::none);
         // Initialize ASIO
         c.init_asio();
         

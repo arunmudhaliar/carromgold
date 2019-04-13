@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5509B4DF2261202E008457E4 /* sha256.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5509B4DD2261202E008457E4 /* sha256.cpp */; };
+		5509B4E02261202E008457E4 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5509B4DE2261202E008457E4 /* LICENSE.txt */; };
 		5517962122529EB000EB638C /* pngrio.c in Sources */ = {isa = PBXBuildFile; fileRef = 5517960822529EB000EB638C /* pngrio.c */; };
 		5517962222529EB000EB638C /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 5517960922529EB000EB638C /* pngerror.c */; };
 		5517962322529EB000EB638C /* pngwio.c in Sources */ = {isa = PBXBuildFile; fileRef = 5517960A22529EB000EB638C /* pngwio.c */; };
@@ -113,6 +115,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5509B4DC2261202E008457E4 /* sha256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
+		5509B4DD2261202E008457E4 /* sha256.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sha256.cpp; sourceTree = "<group>"; };
+		5509B4DE2261202E008457E4 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		551795FF22527D6D00EB638C /* pngLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pngLoader.h; sourceTree = "<group>"; };
 		5517960522529EB000EB638C /* pnginfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pnginfo.h; sourceTree = "<group>"; };
 		5517960822529EB000EB638C /* pngrio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pngrio.c; sourceTree = "<group>"; };
@@ -231,6 +236,7 @@
 		55CFC16B225BD0190001E7E2 /* gxButton.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = gxButton.hpp; sourceTree = "<group>"; };
 		55CFC181225F9F980001E7E2 /* gxBufferFileReader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gxBufferFileReader.cpp; sourceTree = "<group>"; };
 		55CFC182225F9F980001E7E2 /* gxBufferFileReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gxBufferFileReader.h; sourceTree = "<group>"; };
+		55CFC18522608D620001E7E2 /* json.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json.hpp; sourceTree = "<group>"; };
 		55D2A8522187A00700D32E4D /* carromgold.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = carromgold.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		55D2A8552187A00700D32E4D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		55D2A8562187A00700D32E4D /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
@@ -372,6 +378,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5509B4DB2261202E008457E4 /* sha256 */ = {
+			isa = PBXGroup;
+			children = (
+				5509B4DC2261202E008457E4 /* sha256.h */,
+				5509B4DD2261202E008457E4 /* sha256.cpp */,
+				5509B4DE2261202E008457E4 /* LICENSE.txt */,
+			);
+			path = sha256;
+			sourceTree = "<group>";
+		};
 		5517960422529EB000EB638C /* libpng16 */ = {
 			isa = PBXGroup;
 			children = (
@@ -550,6 +566,14 @@
 			path = core;
 			sourceTree = "<group>";
 		};
+		55CFC18422608D620001E7E2 /* nlohmann */ = {
+			isa = PBXGroup;
+			children = (
+				55CFC18522608D620001E7E2 /* json.hpp */,
+			);
+			path = nlohmann;
+			sourceTree = "<group>";
+		};
 		55D2A8492187A00700D32E4D = {
 			isa = PBXGroup;
 			children = (
@@ -618,6 +642,8 @@
 		55D2A8792187A27700D32E4D /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				5509B4DB2261202E008457E4 /* sha256 */,
+				55CFC18422608D620001E7E2 /* nlohmann */,
 				55A69077225939E700AD0578 /* audio */,
 				5517963122529EBA00EB638C /* zlib-1.2.11 */,
 				5517960422529EB000EB638C /* libpng16 */,
@@ -1026,6 +1052,7 @@
 				55FEBD6A218C8CAC002349CA /* CMakeLists.txt in Resources */,
 				5545E6D6218DDB03003641E1 /* res in Resources */,
 				55D2A8592187A00800D32E4D /* Assets.xcassets in Resources */,
+				5509B4E02261202E008457E4 /* LICENSE.txt in Resources */,
 				55D2A85C2187A00800D32E4D /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1065,6 +1092,7 @@
 				55D2A8572187A00700D32E4D /* AppDelegate.mm in Sources */,
 				5517962F22529EB000EB638C /* pngrutil.c in Sources */,
 				55FEBCF4218C71BB002349CA /* Timer.cpp in Sources */,
+				5509B4DF2261202E008457E4 /* sha256.cpp in Sources */,
 				55A690712257E7F900AD0578 /* board.cpp in Sources */,
 				5545E6CC218DC85A003641E1 /* gxFile.cpp in Sources */,
 				553ED1422251363A00800389 /* gxRenderer.cpp in Sources */,
@@ -1236,7 +1264,8 @@
 					"USE_ProgrammablePipeLine=1",
 					"GEAR_APPLE=1",
 					"USE_OPENAL=1",
-					"ENABLE_MULTIPLAYER=0",
+					"ENABLE_MULTIPLAYER=1",
+					"LOG_DEBUG_ENGINE=0",
 				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Source/websocketpp-master\"",

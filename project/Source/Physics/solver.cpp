@@ -30,10 +30,7 @@ Solver::~Solver() {
 
 void Solver::InitSolver(FixedUpdateObserver* fixedDTObserver) {
     this->fixedDTObserver = fixedDTObserver;
-    this->elapsedTime = 0;
-    this->currentTime = Timer::getCurrentTimeInMilliSec();
-    this->accumulator = 0;
-    this->simSteps = 0;
+    ResetTimeVals();
 }
 
 void Solver::AddRigidBody(RigidBody* rb) {
@@ -56,16 +53,23 @@ void Solver::RemoveBoxCollider(BoxCollider* collider) {
     this->boxColliders.erase(std::remove(this->boxColliders.begin(), this->boxColliders.end(), collider), this->boxColliders.end());
 }
 
+void Solver::ResetTimeVals() {
+    this->elapsedTime = 0;
+    this->currentTime = Timer::getCurrentTimeInMilliSec();
+    this->accumulator = 0;
+    this->simSteps = 0;
+}
+
 void Solver::UpdateSolver() {
-    unsigned long newTime = Timer::getCurrentTimeInMilliSec();
-    unsigned long frameTime = newTime - this->currentTime;
+    long newTime = Timer::getCurrentTimeInMilliSec();
+    long frameTime = newTime - this->currentTime;
     if ( frameTime > FIXED_DT_THRESHOLD_READABLE ) {
         frameTime = FIXED_DT_THRESHOLD_READABLE;
     }
     this->currentTime = newTime;
     this->accumulator += frameTime;
     
-    while ( this->accumulator >= FIXED_DT_READABLE ) {
+    while ( this->accumulator > FIXED_DT_READABLE ) {
         this->simSteps++;
         if (this->fixedDTObserver) {
             this->fixedDTObserver->OnFixedUpdate(FIXED_DT);
@@ -82,6 +86,9 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
     vector2x outVelocity;
     std::vector<Collider*> outColliders;
     for (auto rb : this->rigidBodies) {
+        if (!rb->IsActiveRB()) {
+            continue;
+        }
         rb->SimulateStep(fixedDT, outDisplacement, outVelocity);
         rb->ClearForce();
         auto oldVel = rb->GetRBVelocity();
@@ -90,15 +97,22 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
         bool collisionHappened = false;
         vector2x contactNormal;
         rb->SetStateInActiveCollision(false);
-        CheckCollisions(rb, newPos, rb->GetRadiusSq(), collisionHappened, contactNormal, outColliders);
+        bool collidedWithBoxColliders, collidedWithRB;
+        auto prevCheckVal = rb->AllAddForCheck();
+        CheckCollisions(rb, newPos, rb->GetRadiusSq(), collisionHappened, contactNormal, outColliders,
+                        collidedWithBoxColliders, collidedWithRB);
         if (collisionHappened) {
             rb->SetStateInActiveCollision(true);
             
-            const intx degenerationFactor = 205;    // = FTOX(0.05f);  //0.1f
+            const intx degenerationFactor = 409;    // = FTOX(0.05f);  //0.1f
             newPos = newPos + contactNormal*degenerationFactor;
             rb->SetRBPosition(newPos, true);
             
             rb->TriggerCollisionEvent(outColliders);
+            /*
+            DEBUG_PRINT("s:%d e:%lu a:%lu [%d]\t\t'%lld' %s", this->simSteps, this->elapsedTime, this->accumulator,
+                        prevCheckVal, collidedWithBoxColliders, rb->ToString().c_str());
+             */
         } else {
             rb->SetRBVelocity((oldVel+outVelocity)*rb->GetFrictionFactor());
             rb->SetRBPosition(newPos, true);
@@ -151,8 +165,11 @@ void CalculateImpulse(RigidBody& A, RigidBody& B, vector2x& Avel, vector2x& Bvel
 
 bool Solver::IsAllRigidBodiesStopped() {
     for (auto rb : this->rigidBodies) {
-        intx threshold = 8192;  // =FTOX(2.0f)
-        if (rb->GetRBVelocity().lengthSquaredx()>=threshold) {
+        if(!rb->IsActiveRB()) {
+            continue;
+        }
+        intx threshold = 0; //8192;  // =FTOX(2.0f)
+        if (rb->GetRBVelocity().lengthSquaredx()>threshold) {
             return false;
         }
     }
@@ -160,8 +177,11 @@ bool Solver::IsAllRigidBodiesStopped() {
     return true;
 }
 
-void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, bool& collisionHappened, vector2x& contactNormal, std::vector<Collider*>& colliders) {
+void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
+                             bool& collisionHappened, vector2x& contactNormal, std::vector<Collider*>& colliders,
+                             bool& collidedWithBoxColliders, bool& collidedWithRB) {
     collisionHappened = false;
+    collidedWithBoxColliders = collidedWithRB = false;
     int collision_check_cntr=5;
     colliders.clear();
     while(collision_check_cntr--) {
@@ -204,7 +224,7 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
                 if (diff.lengthSquaredx()<=radiusSq) {
                     diff= diff+velocity;
                     diff.normalizex();
-                    auto calcPos = i2 + diff*(rb->GetRadius());
+                    auto calcPos = i2 + diff*(rb->GetRadius()+FX_ONE);
                     avgPos+=calcPos;
                     avgNrml+=normals[x];
                     if (std::find(colliders.begin(), colliders.end(), boxCollider)==colliders.end()) {
@@ -217,6 +237,7 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
                         intx two = 8192;    //= ITOX(2)
                         vector2x refl = normals[x] * MULTX(normals[x].dotx(-rbVel), two) + rbVel;
                         rb->SetRBVelocity((refl)*rbVelMag);
+                        collidedWithBoxColliders = true;
                     }
                     boxCollider->CollidedWithRB(rb, i2, diff);
                     cnt++;
@@ -262,7 +283,7 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
         // all rigid bodies
         vector2x startP = rb->GetRBPosition();
         for (auto orb : this->rigidBodies) {
-            if (orb == rb) {
+            if (orb == rb || !orb->IsActiveRB()) {
                 continue;
             }
             // sweap test
@@ -275,6 +296,7 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
                 diff.normalizex();
                 auto calcPos = orb->GetRBPosition() + diff*(orb->GetRadius()+rb->GetRadius());
                 avgPos+=calcPos;
+//                DEBUG_PRINT("cnt:%d, avgPosL: %d, %d", cnt, avgPos.x, avgPos.y);
                 avgNrml+=diff;
                 if (std::find(colliders.begin(), colliders.end(), orb)==colliders.end()) {
                     colliders.push_back(orb);
@@ -284,12 +306,14 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, boo
                     rb->AddRBVelocity(rbVelToAdd);
                     orb->SetRBVelocity(orbVelToAdd);
                     rb->setDebugPos(closestPt);
+                    collidedWithRB = true;
                 }
                 cnt++;
             }
         }
         
         if(cnt) {
+//            DEBUG_PRINT("cnt:%d, avgPosB: %d, %d", cnt, avgPos.x, avgPos.y);
             avgPos.x=DIVX(avgPos.x,ITOX(cnt));
             avgPos.y=DIVX(avgPos.y,ITOX(cnt));
             // normali

@@ -64,13 +64,17 @@ bool gxHWShader::loadShaderFromBuffer(const std::string& name, const std::string
 	
 	shaderName.assign(name);
 
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Shader loaded %s", shaderName.c_str());
+#endif
     
 	return true;
 }
 
 bool gxHWShader::loadShader(const std::string& shaderFile) {
+#if LOG_DEBUG_ENGINE
 	DEBUG_PRINT("Load shader %s", shaderFile.c_str());
+#endif
 
     std::string orig_filename;
     orig_filename = shaderFile;
@@ -85,7 +89,9 @@ bool gxHWShader::loadShader(const std::string& shaderFile) {
         return loadShaderFromBuffer(orig_filename, data);
     }
     
+#if LOG_DEBUG_ENGINE
     DEBUG_PRINT("Shader %s NOT LOADED", orig_filename.c_str());
+#endif
     return false;
 }
 

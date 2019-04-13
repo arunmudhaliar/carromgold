@@ -51,7 +51,7 @@ public:
         if (t > d) return (b);
         
         // Return the point between 疎?and 礎?		//set length of V to t. V is normalized so this is easy
-        V = V * (int)t;
+        V = V * (intx)t;
         
         return (a+V);	
     }

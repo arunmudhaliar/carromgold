@@ -15,7 +15,7 @@ int GDCPhysics::appEntry() {
                                            SDL_WINDOWPOS_CENTERED,     // x position, centered
                                            SDL_WINDOWPOS_CENTERED,     // y position, centered
                                            640,                        // width, in pixels
-                                           800,                        // height, in pixels
+                                           700,                        // height, in pixels
                                            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN  /*| SDL_WINDOW_RESIZABLE  |  SDL_WINDOW_ALLOW_HIGHDPI */   // flags
                                            );
     
@@ -101,21 +101,29 @@ void GDCPhysics::processSDLEvent(SDL_Window * window, SDL_Event& e, void* userDa
                 break;
             
             case SDL_WINDOWEVENT_FOCUS_LOST: {
-                printf("SDL_WINDOWEVENT_FOCUS_LOST\n");
+#if LOG_DEBUG_ENGINE
+                DEBUG_PRINT("SDL_WINDOWEVENT_FOCUS_LOST");
+#endif
             }
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED: {
-                printf("SDL_WINDOWEVENT_FOCUS_GAINED\n");
+#if LOG_DEBUG_ENGINE
+                DEBUG_PRINT("SDL_WINDOWEVENT_FOCUS_GAINED");
+#endif
             }
                 break;
                 
             case SDL_WINDOWEVENT_SHOWN: {
-                printf("SDL_WINDOWEVENT_SHOWN\n");
+#if LOG_DEBUG_ENGINE
+                DEBUG_PRINT("SDL_WINDOWEVENT_SHOWN");
+#endif
             }
                 break;
 
             case SDL_WINDOWEVENT_EXPOSED: {
-                printf("SDL_WINDOWEVENT_EXPOSED\n");
+#if LOG_DEBUG_ENGINE
+                DEBUG_PRINT("SDL_WINDOWEVENT_EXPOSED");
+#endif
             }
                 break;
 

@@ -8,6 +8,7 @@
 //
 
 #include "rigidBody.h"
+#include "core/util.h"
 
 Collider::Collider(bool isRigidBody) :
 rigidBody(isRigidBody) {
@@ -17,6 +18,9 @@ rigidBody(isRigidBody) {
 Collider::~Collider() {
 }
 
+//==================RIGID BODY==================
+//==================RIGID BODY==================
+//==================RIGID BODY==================
 RigidBody::RigidBody() : Collider(true) {
     SetMass(FX_ONE);
     SetFrictionFactor(0);
@@ -25,6 +29,7 @@ RigidBody::RigidBody() : Collider(true) {
     
     SetStateInActiveCollision(false);
     this->isMoving = false;
+    ActivatePhysics();
     
     float size = 5.0f;
     int delta = (360/SEGMENTS_DEBUG);
@@ -51,6 +56,14 @@ RigidBody::RigidBody() : Collider(true) {
 }
 
 RigidBody::~RigidBody() {
+}
+
+void RigidBody::ActivatePhysics() {
+    this->active = true;
+}
+
+void RigidBody::DeactivatePhysics() {
+    this->active = false;
 }
 
 void RigidBody::SimulateStep(intx fixedDT, vector2x& displacement, vector2x& vel) {
@@ -126,6 +139,10 @@ void RigidBody::DrawDebugPos() {
 }
 
 void RigidBody::PhysicsUpdate() {
+    if (!this->active) {
+        return;
+    }
+    
     bool isMovingOld = this->isMoving;
     this->isMoving = this->velocity.lengthSquaredx()>0;
     
@@ -136,4 +153,17 @@ void RigidBody::PhysicsUpdate() {
     }
     
     this->OnPhysicsUpdate();
+}
+
+const long long RigidBody::AllAddForCheck() {
+    return (this->velocity.x+this->velocity.y+this->position.x+this->position.y+this->force.x+ this->force.y);
+}
+
+const std::string RigidBody::ToString() {
+    return util::stringFormat("RB %lld %s %s v(%d, %d), p(%d, %d), f(%d, %d)",
+                              this->AllAddForCheck(),
+                              this->name.c_str(), (this->active)?"":"D",
+                              this->velocity.x, this->velocity.y,
+                              this->position.x, this->position.y,
+                              this->force.x, this->force.y);
 }

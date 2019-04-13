@@ -43,7 +43,8 @@ public:
     Board();
     ~Board();
     
-    void InitBoard(const vector2i& viewPort, CGETextureManager& textureManager, SoundEngine* soundEnginePtr);
+    void InitBoard(const vector2i& viewPort, CGETextureManager& textureManager,
+                   SoundEngine* soundEnginePtr, MStrickerObserver* observer);
     void UpdateBoard();
     void DrawBoard(const matrix4x4f& viewProjection);
     
@@ -62,12 +63,20 @@ public:
     void TryStartGame();
     void TryTurnPlayer(bool force = false);
     void TryTurnOpponent(bool force = false);
+    bool CanShowBoard() { return this->gameState>=GAME_START && this->gameState<=GAME_RESET; }
+    bool IsPlayerStricker(Stricker* stricker);
+    
+    // For opponent stricker
+    void Remote_Fire(const vector2x& force);
+    
+    inline Solver& GetPhysicsSolver() { return this->physicsSolver; }
+    inline const std::map<int, Ball*>& GetCoins() { return this->coins; }
     
 protected:
     
+    void StopAllCoins();
     void SetGameState(GAME_STATE state);
     void ResetCoins();
-    void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);
     
     void OnGameStateChange(GAME_STATE from);
     void OnGameInit();
@@ -84,6 +93,8 @@ protected:
     
     PLAYER_TYPE playerType;
     PLAYER_TURN gameTurn;
+    vector2x bottomStrickerInitPosition;
+    vector2x topStrickerInitPosition;
     
     Solver physicsSolver;
     GAME_STATE gameState;

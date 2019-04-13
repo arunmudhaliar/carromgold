@@ -34,17 +34,21 @@ public:
     unsigned long GetElapsedTime()  { return elapsedTime; }
     bool IsAllRigidBodiesStopped();
     
+    void ResetTimeVals();
+    
 private:
     std::vector<RigidBody*> rigidBodies;
     std::vector<BoxCollider*> boxColliders;
     
     void UpdatePhysics(__int64_t step, intx fixedDT);
-    void CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq, bool& collisionHappened, vector2x& contactNormal, std::vector<Collider*>& colliders);
+    void CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
+                         bool& collisionHappened, vector2x& contactNormal, std::vector<Collider*>& colliders,
+                         bool& collidedWithBoxColliders, bool& collidedWithRB);
     
     // timer
-    unsigned long elapsedTime;
-    unsigned long currentTime;
-    unsigned long accumulator;
+    long elapsedTime;
+    long currentTime;
+    long accumulator;
     __int64_t simSteps;
     
     FixedUpdateObserver* fixedDTObserver;

@@ -86,7 +86,7 @@ JNIEXPORT jint JNICALL Java_com_moonfrog_carromgold_MainActivity_mainlib(JNIEnv*
         assert(false);
     }
     OSUtils::cpp_setAssetManager(globalAssetManager);
-    
+
 	return 0;
 }
 

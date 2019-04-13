@@ -49,6 +49,7 @@ public:
     virtual void OnStricker_StateChangeTo_Shoot(Stricker*) = 0;
     virtual void OnStricker_Move(Stricker*) = 0;
     virtual void OnStricker_Aim(Stricker*) = 0;
+    virtual void OnStricker_StateChangeTo_PlaceStricker(Stricker*) = 0;
 };
 
 class Stricker : public Ball {
@@ -62,7 +63,8 @@ public:
     
     Stricker();
     virtual ~Stricker();
-    void InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager, SoundEngine* soundEnginePtr);
+    void InitStricker(intx size, intx mass, intx frictionfactor, const vector2x& pos, CGETextureManager& textureManager,
+                      SoundEngine* soundEnginePtr, const std::string& name, MStrickerObserver* observer=nullptr);
     bool IsOverlap(const vector2x& pos);
     bool IsGrabed() { return this->grabed; }
     bool IsAim()    { return this->inputIsAim; }
@@ -85,6 +87,13 @@ public:
     
     void SetStrickerInputOption(STRICKER_INPUT_METHOD option) { this->inputOption = option; }
     
+    void SetStrickerPosition(const vector2x& pos);
+    
+    // Remote
+    void Remote_SetGrabbed(bool flag);
+    void Remote_SetAimMode(bool flag);
+    void Remote_SetMoveMode(bool flag);
+    
 protected:
     void UpdateStricker1(intx fixedDT);
     void UpdateStricker2(intx fixedDT);
@@ -102,7 +111,7 @@ protected:
     void SetMoveMode(bool flag);
     
     void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);
-    void Cmd_TryShoot();
+    void Fire();
     
     void SetMoveArrowPositions(const vector2x& pos);
     bool grabed;
