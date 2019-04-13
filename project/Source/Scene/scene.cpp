@@ -436,9 +436,11 @@ void Scene::OnNetworkClose() {
     statusMsg = "DISCONECTED";
 //    SetGameState(GAME_RESET);
 }
-    
+#endif
+
 // Stricker
 void Scene::OnStricker_StateChangeTo_Grab(Stricker* stricker) {
+#if ENABLE_MULTIPLAYER
     if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
         return;
     }
@@ -451,9 +453,11 @@ void Scene::OnStricker_StateChangeTo_Grab(Stricker* stricker) {
         DEBUG_PRINT("<=== json %s", j.dump().c_str());
         NetworkManager::GetInstance().SendMessage(j.dump());
     }
+#endif
 }
 
 void Scene::OnStricker_StateChangeTo_Aim(Stricker* stricker) {
+#if ENABLE_MULTIPLAYER
     if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
         return;
     }
@@ -466,9 +470,11 @@ void Scene::OnStricker_StateChangeTo_Aim(Stricker* stricker) {
         DEBUG_PRINT("<=== json %s", j.dump().c_str());
         NetworkManager::GetInstance().SendMessage(j.dump());
     }
+#endif
 }
 
 void Scene::OnStricker_StateChangeTo_Move(Stricker* stricker) {
+#if ENABLE_MULTIPLAYER
     if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
         return;
     }
@@ -481,9 +487,11 @@ void Scene::OnStricker_StateChangeTo_Move(Stricker* stricker) {
         DEBUG_PRINT("<=== json %s", j.dump().c_str());
         NetworkManager::GetInstance().SendMessage(j.dump());
     }
+#endif
 }
 
 void Scene::OnStricker_StateChangeTo_Shoot(Stricker* stricker) {
+#if ENABLE_MULTIPLAYER
     if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
         return;
     }
@@ -500,9 +508,11 @@ void Scene::OnStricker_StateChangeTo_Shoot(Stricker* stricker) {
         this->debugShootValSend = j.dump();
         NetworkManager::GetInstance().SendMessage(j.dump());
     }
+#endif
 }
 
 void Scene::OnStricker_StateChangeTo_PlaceStricker(Stricker* stricker) {
+#if ENABLE_MULTIPLAYER
     if (this->board.GetBoardState() == Board::GAME_PLAYER_FIRE) {
         return;
     }
@@ -530,6 +540,7 @@ void Scene::OnStricker_StateChangeTo_PlaceStricker(Stricker* stricker) {
         auto jdump = j.dump();
         NetworkManager::GetInstance().SendMessage(jdump);
 //    }
+#endif
 }
     
 void Scene::OnStricker_Move(Stricker* stricker) {
@@ -539,8 +550,7 @@ void Scene::OnStricker_Move(Stricker* stricker) {
 void Scene::OnStricker_Aim(Stricker* stricker) {
     
 }
-    
-    
+
 bool Scene::CheckShas() {
     if (sha256Str_incoming != sha256Str) {
         DEBUG_PRINT("!!!!!!!!!!!!! SHA MISMATCH !!!!!!!!!!!!!");
@@ -575,4 +585,3 @@ bool Scene::CheckShas() {
     
     return true;
 }
-#endif

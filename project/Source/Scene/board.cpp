@@ -72,6 +72,7 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     
     this->SetGameState(GAME_INIT);
 #if !ENABLE_MULTIPLAYER
+    this->SetPlayerType(PLAYER_FIRST);
     this->SetGameState(GAME_START);
 #endif
 }

@@ -4,8 +4,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := carromgold
 LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lOpenSLES
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
-#$(call import-add-path,$(LOCAL_PATH)/websocketpp-master)
-#$(call import-add-path,$(LOCAL_PATH)/asiosdk)
+$(call import-add-path,$(LOCAL_PATH)/websocketpp-master)
+$(call import-add-path,$(LOCAL_PATH)/asiosdk)
 LOCAL_SRC_FILES := gearapp.cpp  \
                     ../../../../../Source/Physics/colliders/boxCollider.cpp \
                     ../../../../../Source/Physics/core/types.cpp \
@@ -34,6 +34,8 @@ LOCAL_SRC_FILES := gearapp.cpp  \
                     ../../../../../Source/audio/SoundSample.cpp \
                     ../../../../../Source/audio/SoundSource.cpp \
                     ../../../../../Source/audio/SoundEngine.cpp \
+                    ../../../../../Source/sha256/sha256.cpp \
+                    ../../../../../Source/Connection/NetworkManager.cpp \
                     ../../../../../Source/zlib-1.2.11/adler32.c	\
                     ../../../../../Source/zlib-1.2.11/compress.c	\
                     ../../../../../Source/zlib-1.2.11/crc32.c	\
@@ -61,8 +63,8 @@ LOCAL_SRC_FILES := gearapp.cpp  \
                     ../../../../../Source/libpng16/pngwtran.c    \
                     ../../../../../Source/libpng16/pngwutil.c    \
 
-#LOCAL_C_INCLUDES := $(LOCAL_PATH)/websocketpp-master
-#LOCAL_C_INCLUDES += $(LOCAL_PATH)/asiosdk
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/websocketpp-master
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/asiosdk
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/libpng16
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/zlib-1.2.11
 

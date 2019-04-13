@@ -22,8 +22,11 @@
 #include "../GUI/gxButton.hpp"
 #include <map>
 #if GEAR_APPLE
-#include "../Connection/NetworkManager.hpp"
 #include <SDL2/SDL.h>
+#endif
+
+#if ENABLE_MULTIPLAYER
+#include "../Connection/NetworkManager.hpp"
 #endif
 
 #define SHOW_DEBUG_PANEL 0

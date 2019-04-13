@@ -31,6 +31,9 @@
     <output url="file://$MODULE_DIR$/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes" />
     <output-test url="file://$MODULE_DIR$/build/intermediates/javac/debugUnitTest/compileDebugUnitTestJavaWithJavac/classes" />
     <exclude-output />
+    <content url="file://$MODULE_DIR$/../../Source/Connection">
+      <sourceFolder url="file://$MODULE_DIR$/../../Source/Connection" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/../../Source/GUI">
       <sourceFolder url="file://$MODULE_DIR$/../../Source/GUI" isTestSource="false" />
     </content>
@@ -57,6 +60,9 @@
     </content>
     <content url="file://$MODULE_DIR$/../../Source/libpng16">
       <sourceFolder url="file://$MODULE_DIR$/../../Source/libpng16" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../Source/sha256">
+      <sourceFolder url="file://$MODULE_DIR$/../../Source/sha256" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$/../../Source/zlib-1.2.11">
       <sourceFolder url="file://$MODULE_DIR$/../../Source/zlib-1.2.11" isTestSource="false" />
@@ -140,7 +146,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental-runtime-classes" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental-verifier" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant-run-apk" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant-run-resources" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant_app_manifest" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant_run_app_info_output_file" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant_run_main_apk_resources" />
