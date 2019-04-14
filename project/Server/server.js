@@ -7,6 +7,9 @@ class Room {
     this._pingAknReceivedFromSecond = 0;
     this._firstScore = 0;
     this._secondScore = 0;
+    this._turn = 0; //1-first, 2-second
+    this._turnEndedAtFirst = 1;
+    this._turnEndedAtSecond = 1;
     console.log("Room created "+this.name);
   }
   // set name(name) {
@@ -63,6 +66,35 @@ class Room {
     return 0;
   }
 
+  startTurn(id) {
+    //turn
+    var cmd_turn = {};
+    cmd_turn['cmd'] = {};
+    cmd_turn['cmd']['id'] = 'turn';
+    var jturncmd = JSON.stringify(cmd_turn);
+
+    var cmd_turn_op = {};
+    cmd_turn_op['cmd'] = {};
+    cmd_turn_op['cmd']['id'] = 'turn_op';
+    var jturnopcmd = JSON.stringify(cmd_turn_op);
+
+    if (id ==1) {
+      this._turn = 1;
+      this._turnEndedAtFirst = 0;
+      this._turnEndedAtSecond = 0;
+      this._first.send(jturncmd);
+      this._second.send(jturnopcmd);
+    } else if (id ==2){
+      this._turn = 2;
+      this._turnEndedAtFirst = 0;
+      this._turnEndedAtSecond = 0;
+      this._second.send(jturncmd);
+      this._first.send(jturnopcmd);
+    } else {
+      console.warn('invalid id '+id);
+    }
+  }
+
   startGame() {
     console.log("startGame for room "+this.name);
     var cmd_startgame = {};
@@ -71,6 +103,7 @@ class Room {
     var jcmd = JSON.stringify(cmd_startgame);
     this._first.send(jcmd);
     this._second.send(jcmd);
+    this.startTurn(1);
   }
 
   initGame() {
@@ -192,10 +225,12 @@ function waitingRoom() {
 }
 
 function stopGame(connection) {
+  var roomNameToRemove = '';
   var index = -1;
   for (i=0;i<rooms.length;i++) {
     if (rooms[i].isMemberOfThisRoom(getIP(connection)) > 0) {
       rooms[i].stopGame(connection);
+      roomNameToRemove = rooms[i].name;
       index = i;
       break;
     }
@@ -203,7 +238,7 @@ function stopGame(connection) {
 
   if (index>-1) {
     rooms.splice(index, 1);
-    console.log("Room removed "+rooms.length);
+    console.log("Room removed "+roomNameToRemove);
   }
 }
 
@@ -223,6 +258,15 @@ function messagePass(connection, msg) {
         } else if (cmdID == "goal") {
           rooms[i]._secondScore++;
           rooms[i].sendScoreUpdate();
+        } else if (cmdID == "turnend") {
+          rooms[i]._turnEndedAtFirst = 1;
+          if (rooms[i]._turnEndedAtSecond) {
+            var nextTurn = (rooms[i]._turn==1)?2:1;
+            console.log('next turn - '+nextTurn);
+            rooms[i].startTurn(nextTurn);
+          } else {
+            console.log('waiting for second players turn to finish.');
+          }
         } else {
           if (rooms[i].second) {
             rooms[i].second.send(msg);
@@ -237,6 +281,15 @@ function messagePass(connection, msg) {
         } else if (cmdID == "goal") {
           rooms[i]._firstScore++;
           rooms[i].sendScoreUpdate();
+        } else if (cmdID == "turnend") {
+          rooms[i]._turnEndedAtSecond = 1;
+          if (rooms[i]._turnEndedAtFirst) {
+            var nextTurn = (rooms[i]._turn==1)?2:1;
+            console.log('next turn - '+nextTurn);
+            rooms[i].startTurn(nextTurn);
+          } else {
+            console.log('waiting for first players turn to finish.');
+          }
         } else {
           if (rooms[i].first) {
             rooms[i].first.send(msg);

@@ -889,7 +889,7 @@ void Stricker::MoveStricker(intx fixedDT, Ball& ball, vector2x& delta) {
     if (position.x < leftMargin.x) {
         position.x = leftMargin.x;
     }
-    ball.SetRBPosition(position);
+    ball.SetRBPosition(position, true);
 }
 
 void Stricker::Fire() {

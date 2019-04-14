@@ -35,7 +35,7 @@ class Scene : protected MStrickerObserver
 #if ENABLE_MULTIPLAYER
 , protected NetworkManagerDelegate
 #endif
-{
+, protected MBoardObserver {
 private:
     Scene();
     
@@ -89,6 +89,9 @@ protected:
     void OnStricker_Aim(Stricker*) override;
     void OnStricker_StateChangeTo_PlaceStricker(Stricker*) override;
     
+    // Board observer
+    void OnFinishTurn() override;
+    
     void DrawStats();
     void SendPing();
     
@@ -96,6 +99,10 @@ private:
     
     void InternalGLStates();
     bool CheckShas();
+    const std::string GetCurrentSha();
+#if ENABLE_MULTIPLAYER
+    void SendSha();
+#endif
     
     // window
     vector2i windowSize;

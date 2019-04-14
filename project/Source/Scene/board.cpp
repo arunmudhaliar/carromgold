@@ -25,6 +25,7 @@ Board::Board() {
     this->gameState = GAME_STATE_MAX;
     this->elapsedTimeSinceFire = 0;
     this->soundEnginePtr = nullptr;
+    this->boardObserver = nullptr;
 }
 
 Board::~Board() {
@@ -35,7 +36,8 @@ Board::~Board() {
 }
 
 void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManager
-                      , SoundEngine* soundEnginePtr, MStrickerObserver* observer) {
+                      , SoundEngine* soundEnginePtr, MStrickerObserver* observer, MBoardObserver* boardObserver) {
+    this->boardObserver = boardObserver;
     this->soundEnginePtr = soundEnginePtr;
     this->bgSprite.setOffset(0, 0);
     this->bgSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/bg.png").c_str());
@@ -124,7 +126,7 @@ void Board::OnFixedUpdate(intx fixedDT) {
             }
             
             if (this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
-                SetGameState(GAME_PLAYER_PLACE_STRICKER);
+                SetGameState(GAME_FINISH_TURN);
             }
         }
     }
@@ -233,14 +235,10 @@ void Board::TryTurnOpponent(bool force/* = false*/) {
 }
 
 void Board::OnPlayerTurn() {
-    this->playerStricker.ActivatePhysics();
-    this->opponentStricker.DeactivatePhysics();
     this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
 }
 
 void Board::OnOpponentTurn() {
-    this->playerStricker.DeactivatePhysics();
-    this->opponentStricker.ActivatePhysics();
     this->SetGameState(GAME_PLAYER_PLACE_STRICKER);
 }
 
@@ -273,6 +271,10 @@ void Board::OnGameStateChange(GAME_STATE from) {
             break;
         case GAME_PLAYER_FIRE: {
             OnGamePlayerFire();
+        }
+            break;
+        case GAME_FINISH_TURN: {
+            OnGameFinishTurn();
         }
             break;
         case GAME_RESET: {
@@ -398,7 +400,9 @@ void Board::OnGameStart() {
             this->boardMatrix.identity();
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
+#if !ENABLE_MULTIPLAYER
             this->TryTurnPlayer(true);
+#endif
         }
         break;
             
@@ -414,7 +418,9 @@ void Board::OnGameStart() {
             this->boardMatrix.setRotationMatrix(180, 0, 0, true);
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
+#if !ENABLE_MULTIPLAYER
             this->TryTurnOpponent(true);
+#endif
         }
         break;
         default: {
@@ -428,7 +434,9 @@ void Board::OnGameStart() {
             this->boardMatrix.identity();
             this->boardMatrix.setPosition(BOARD_OFFSET.x, BOARD_OFFSET.y, 0);
             this->boardMatrixInv = this->boardMatrix.getInverse();
+#if !ENABLE_MULTIPLAYER
             this->TryTurnPlayer(true);
+#endif
         }
             break;
     }
@@ -453,13 +461,31 @@ void Board::OnGamePlayerPlaceAim() {
 
 void Board::OnGamePlayerFire() {
     this->elapsedTimeSinceFire = 0;
+    if (this->IsMyTurn()) {
+        this->playerStricker.ActivatePhysics();
+        this->opponentStricker.DeactivatePhysics();
+    } else {
+        this->opponentStricker.ActivatePhysics();
+        this->playerStricker.DeactivatePhysics();
+    }
+}
+
+void Board::OnGameFinishTurn() {
+    StopAllCoins();
+    this->playerStricker.DeactivatePhysics();
+    this->opponentStricker.DeactivatePhysics();
+#if ENABLE_MULTIPLAYER
+    this->boardObserver->OnFinishTurn();
+#else
+    SetGameState(GAME_PLAYER_PLACE_STRICKER);
+#endif
 }
 
 void Board::OnGameReset() {
 }
 
 void Board::MouseBtnUp(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_PLAYER_FIRE && this->IsMyTurn())) {
         return;
     }
     
@@ -478,7 +504,7 @@ void Board::MouseBtnUp(const vector2x& pos) {
 }
 
 void Board::MouseBtnDown(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_PLAYER_FIRE && this->IsMyTurn())) {
         return;
     }
     
@@ -487,7 +513,7 @@ void Board::MouseBtnDown(const vector2x& pos) {
 }
 
 void Board::MouseMove(const vector2x& pos) {
-    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_RESET && this->IsMyTurn())) {
+    if (!(this->gameState >= GAME_PLAYER_PLACE_STRICKER && this->gameState < GAME_PLAYER_FIRE && this->IsMyTurn())) {
         return;
     }
     auto transformedPos = this->boardMatrixInv*vector2f(XTOF(pos.x), XTOF(pos.y));

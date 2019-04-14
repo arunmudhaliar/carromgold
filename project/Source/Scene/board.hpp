@@ -16,6 +16,12 @@
 #include <map>
 #include <stdio.h>
 
+class Board;
+class MBoardObserver {
+public:
+    virtual void OnFinishTurn() =0;
+};
+
 class Board : protected FixedUpdateObserver {
 public:
     enum PLAYER_TYPE {
@@ -30,6 +36,7 @@ public:
         GAME_PLAYER_PLACE_STRICKER,
         GAME_PLAYER_PLACE_AIM,
         GAME_PLAYER_FIRE,
+        GAME_FINISH_TURN,
         GAME_RESET,
         GAME_STATE_MAX
     };
@@ -44,7 +51,7 @@ public:
     ~Board();
     
     void InitBoard(const vector2i& viewPort, CGETextureManager& textureManager,
-                   SoundEngine* soundEnginePtr, MStrickerObserver* observer);
+                   SoundEngine* soundEnginePtr, MStrickerObserver* observer, MBoardObserver* boardObserver);
     void UpdateBoard();
     void DrawBoard(const matrix4x4f& viewProjection);
     
@@ -84,12 +91,15 @@ protected:
     void OnGamePlayerPlaceStricker();
     void OnGamePlayerPlaceAim();
     void OnGamePlayerFire();
+    void OnGameFinishTurn();
     void OnGameReset();
     void OnFixedUpdate(intx fixedDT) override;
     
     // GamePlay observers
     void OnPlayerTurn();
     void OnOpponentTurn();
+    
+    MBoardObserver* boardObserver;
     
     PLAYER_TYPE playerType;
     PLAYER_TURN gameTurn;

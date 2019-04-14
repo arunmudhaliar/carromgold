@@ -79,7 +79,7 @@ void Scene::InitScene(float cx, float cy) {
         }
     }
     
-    board.InitBoard(vector2i(cx, cy), textureManager, &this->soundEngine, this);
+    board.InitBoard(vector2i(cx, cy), textureManager, &this->soundEngine, this, this);
     
     
     float btn_width = 200.0f;
@@ -303,15 +303,9 @@ void Scene::MouseMove(int mx, int my) {
 }
 
 void Scene::StartGameFromMenu() {
-//    if (this->gameState == GAME_INIT || this->gameState == GAME_RESET) {
-////        NetworkManager::GetInstance().SendMessage("ping");
-//    }
 }
 
 void Scene::SendPing() {
-//    if (this->gameState == GAME_START ) {
-////        NetworkManager::GetInstance().SendMessage("ping");
-//    }
 }
 
 #if ENABLE_MULTIPLAYER
@@ -334,38 +328,30 @@ void Scene::OnNetworkMessage(const std::string& msg) {
     
     auto gameState = this->board.GetBoardState();
     if (jcmdID == "playerid") {
-        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
+        if (gameState == Board::GAME_INIT) {
             auto jcmdValue = jcmd["value"];
-            //            this->physicsSolver.RemoveBoxCollider(&player1);
-            //            this->physicsSolver.RemoveBoxCollider(&player2);
             if (jcmdValue == "first") {
                 this->board.SetPlayerType(Board::PLAYER_FIRST);
-                //                this->physicsSolver.AddBoxCollider(&player1);
             } else if (jcmdValue == "second") {
                 this->board.SetPlayerType(Board::PLAYER_SECOND);
-                //                this->physicsSolver.AddBoxCollider(&player2);
             }
             
             njson j;
             j["cmd"]["id"] = "ping";
             NetworkManager::GetInstance().SendMessage(j.dump());
-            //            pingTimeFromOtherPlayer = 0;
-            //            pingStartTime = Timer::getCurrentTimeInMilliSec();
         }
     } else if (jcmdID == "ping") {
-        //        pingTimeFromOtherPlayer = Timer::getCurrentTimeInMilliSec()-pingStartTime;
-        //        printf("PING TIME %lu ms.\n", pingTimeFromOtherPlayer);
-        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
+        if (gameState == Board::GAME_INIT) {
             njson j;
             j["cmd"]["id"] = "ping_akn";
             NetworkManager::GetInstance().SendMessage(j.dump());
         }
     } else if (jcmdID == "startgame") {
-        if (gameState == Board::GAME_INIT || gameState == Board::GAME_RESET) {
+        if (gameState == Board::GAME_INIT) {
             this->board.TryStartGame();
         }
     } else if (jcmdID == "tograb") {
-        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_FINISH_TURN) {
             auto jcmdValue = jcmd["value"];
             auto px = jcmdValue["px"];
             auto py = jcmdValue["py"];
@@ -375,7 +361,7 @@ void Scene::OnNetworkMessage(const std::string& msg) {
             this->board.GetOpponentStricker().Remote_SetGrabbed(true);
         }
     } else if (jcmdID == "tomove") {
-        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_FINISH_TURN) {
             auto jcmdValue = jcmd["value"];
             auto px = jcmdValue["px"];
             auto py = jcmdValue["py"];
@@ -385,7 +371,7 @@ void Scene::OnNetworkMessage(const std::string& msg) {
             this->board.GetOpponentStricker().Remote_SetMoveMode(true);
         }
     } else if (jcmdID == "toaim") {
-        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_FINISH_TURN) {
             auto jcmdValue = jcmd["value"];
             auto px = jcmdValue["px"];
             auto py = jcmdValue["py"];
@@ -395,7 +381,7 @@ void Scene::OnNetworkMessage(const std::string& msg) {
             this->board.GetOpponentStricker().Remote_SetAimMode(true);
         }
     } else if (jcmdID == "toshoot") {
-        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_RESET) {
+        if (gameState >= Board::GAME_PLAYER_PLACE_STRICKER && gameState <= Board::GAME_FINISH_TURN) {
             this->debugShootValReceived = jobj.dump();
             auto jcmdValue = jcmd["value"];
             auto px = jcmdValue["px"];
@@ -419,6 +405,14 @@ void Scene::OnNetworkMessage(const std::string& msg) {
                 auto data = jcmdArray[x].get<std::string>();
                 this->sha256Array_incoming.push_back(data);
             }
+        }
+    } else if (jcmdID == "turn") {
+        if (gameState >= Board::GAME_START && gameState <= Board::GAME_FINISH_TURN) {
+            this->board.TryTurnPlayer(true);
+        }
+    } else if (jcmdID == "turn_op") {
+        if (gameState >= Board::GAME_START && gameState <= Board::GAME_FINISH_TURN) {
+            this->board.TryTurnOpponent(true);
         }
     }
 }
@@ -517,29 +511,7 @@ void Scene::OnStricker_StateChangeTo_PlaceStricker(Stricker* stricker) {
         return;
     }
     
-    this->sha256Source = "";
-    this->sha256Str = "";
-    this->sha256Array.clear();
-    std::stringstream s;
-    auto jsonarray = njson::array();
-    for(auto c : this->board.GetCoins()) {
-        auto data = c.second->ToString();
-        s << data;
-        //        jsonarray.push_back(data);
-        //        sha256Array.push_back(data);
-    }
-    sha256Source = s.str();
-    sha256Str = sha256(sha256Source);
-    DEBUG_PRINT("sha256 - %s", sha256Str.c_str());
-    
-//    if (this->board.IsPlayerStricker(stricker)) {
-        njson j;
-        j["cmd"]["id"] = "sha";
-        j["cmd"]["value"] = sha256Str;
-        j["cmd"]["array"] = jsonarray;
-        auto jdump = j.dump();
-        NetworkManager::GetInstance().SendMessage(jdump);
-//    }
+    this->SendSha();
 #endif
 }
     
@@ -550,6 +522,51 @@ void Scene::OnStricker_Move(Stricker* stricker) {
 void Scene::OnStricker_Aim(Stricker* stricker) {
     
 }
+
+void Scene::OnFinishTurn() {    
+#if ENABLE_MULTIPLAYER
+    this->sha256Array.clear();
+    this->sha256Source = GetCurrentSha();
+    this->sha256Str = sha256(this->sha256Source);
+    njson j;
+    j["cmd"]["id"] = "turnend";
+    auto jdump = j.dump();
+    j["cmd"]["value"] = this->sha256Str;
+    NetworkManager::GetInstance().SendMessage(jdump);
+#endif
+}
+
+#include<sstream>
+    
+const std::string Scene::GetCurrentSha() {
+    std::stringstream s;
+    for(auto c : this->board.GetCoins()) {
+        auto data = c.second->ToString();
+        s << data;
+        //        jsonarray.push_back(data);
+        //        sha256Array.push_back(data);
+    }
+    return s.str();
+}
+
+#if ENABLE_MULTIPLAYER
+void Scene::SendSha() {
+    this->sha256Array.clear();
+    this->sha256Source = GetCurrentSha();
+    this->sha256Str = sha256(this->sha256Source);
+    auto jsonarray = njson::array();
+    DEBUG_PRINT("sha256 - %s", sha256Str.c_str());
+    
+    //    if (this->board.IsPlayerStricker(stricker)) {
+    njson j;
+    j["cmd"]["id"] = "sha";
+    j["cmd"]["value"] = sha256Str;
+    j["cmd"]["array"] = jsonarray;
+    auto jdump = j.dump();
+    NetworkManager::GetInstance().SendMessage(jdump);
+    //    }
+}
+#endif
 
 bool Scene::CheckShas() {
     if (sha256Str_incoming != sha256Str) {
