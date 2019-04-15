@@ -80,6 +80,25 @@ void Solver::UpdateSolver() {
     }
 }
 
+RigidBody* Solver::IsOverlapWithRigidBodies(RigidBody* rb, bool onlyActiveRBs) {
+    // all rigid bodies
+    vector2x startP = rb->GetRBPosition();
+    for (auto orb : this->rigidBodies) {
+        if (orb == rb || (onlyActiveRBs && !orb->IsActiveRB())) {
+            continue;
+        }
+        // overlap test
+        auto diff = startP-orb->GetRBPosition();
+        intx r2 = rb->GetRadius()+orb->GetRadius();
+        intx r2sq = MULTX(r2, r2);
+        if (diff.lengthSquaredx()<=r2sq) {
+            return orb;
+        }
+    }
+    
+    return nullptr;
+}
+
 void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
     // Euler integrator.
     vector2x outDisplacement;

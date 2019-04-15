@@ -39,13 +39,14 @@ void Wall::OnCollidedWithRB(RigidBody* rb, const vector2x& contactPt, const vect
     float ratio = currentVel/MAX_COIN_VELOCITY;
     ratio = MIN(ratio, 1.0f);
     
-    if (ratio>0.02f) {
-        if (rb->GetTag() == "Coin" || rb->GetTag() == "Queen") {
+    Ball* coin = dynamic_cast<Ball*>(rb);
+    if (ratio>0.02f && coin) {
+        if (Ball::IsCoin(*coin)) {
             int sfxID = getRandom(SFX_SOUND::sfx_puck_hits_edge_1, SFX_SOUND::sfx_puck_hits_edge_5+1);
             auto sfxSrc = this->soundEnginePtr->getSource(sfxID);
             sfxSrc->setVolume(ratio*0.75f);
             sfxSrc->play(false);
-        } else if (rb->GetTag() == "Stricker") {
+        } else if (Ball::IsStricker(*coin)) {
             auto sfxSrc = this->soundEnginePtr->getSource(SFX_SOUND::sfx_puck_hits_edge_3);
             sfxSrc->setVolume(ratio*0.75f);
             sfxSrc->play(false);

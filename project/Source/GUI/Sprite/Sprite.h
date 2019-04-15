@@ -72,8 +72,8 @@ public:
     int getRenderFlag()             {   return spriteRenderFlag;   }
     bool isRenderFlag(int flags)    {   return ((spriteRenderFlag&flags)>0)?true:false;    }
 	
-    void setAlpha(float alpha)        {   this->alpha=alpha;     }
-    float getAlpha()                  {   return alpha;    }
+    void setAlpha(float alpha)        {   this->spriteRGB[3]=alpha;     }
+    float getAlpha()                  {   return this->spriteRGB[3];    }
     
     void setRGB(float r, float g, float b)   {   spriteRGB[0]=r; spriteRGB[1]=g; spriteRGB[2]=b;    }
 	float* getRGB()		{	return spriteRGB;	}
@@ -112,8 +112,7 @@ protected:
 	float spriteClipWidth;
 	float spriteClipHeight;
     int spriteRenderFlag;
-    float alpha;
-    float spriteRGB[3];
+    float spriteRGB[4];
     float alphaThreshold;
     float rotation;
     vector2f scale;

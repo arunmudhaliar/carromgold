@@ -29,7 +29,7 @@
 #include "../Connection/NetworkManager.hpp"
 #endif
 
-#define SHOW_DEBUG_PANEL 0
+#define SHOW_DEBUG_PANEL 1
 
 class Scene : protected MStrickerObserver
 #if ENABLE_MULTIPLAYER
@@ -90,6 +90,7 @@ protected:
     void OnStricker_StateChangeTo_PlaceStricker(Stricker*) override;
     
     // Board observer
+    void OnPocketed(Ball& coin) override;
     void OnFinishTurn() override;
     
     void DrawStats();

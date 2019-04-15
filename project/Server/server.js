@@ -10,6 +10,7 @@ class Room {
     this._turn = 0; //1-first, 2-second
     this._turnEndedAtFirst = 1;
     this._turnEndedAtSecond = 1;
+    this._lastTurnGoal = 0;
     console.log("Room created "+this.name);
   }
   // set name(name) {
@@ -78,6 +79,7 @@ class Room {
     cmd_turn_op['cmd']['id'] = 'turn_op';
     var jturnopcmd = JSON.stringify(cmd_turn_op);
 
+    this._lastTurnGoal = 0;
     if (id ==1) {
       this._turn = 1;
       this._turnEndedAtFirst = 0;
@@ -122,9 +124,17 @@ class Room {
 
   sendScoreUpdate() {
     console.log("sendScoreUpdate for room "+this.name);
-    var score_str = "score|"+this._firstScore +","+this._secondScore;
+    var cmd_score = {};
+    cmd_score['cmd'] = {};
+    cmd_score['cmd']['id'] = 'score';
+    cmd_score['cmd']['value'] = {};
+    cmd_score['cmd']['value']['first'] = this._firstScore;
+    cmd_score['cmd']['value']['second'] = this._secondScore;
+    var score_str = JSON.stringify(cmd_score);
     this._first.send(score_str);
     this._second.send(score_str);
+
+    console.log("<==="+JSON.stringify(score_str));
   }
 
   stopGame(connection) {
@@ -256,12 +266,17 @@ function messagePass(connection, msg) {
             rooms[i].startGame();
           }
         } else if (cmdID == "goal") {
-          rooms[i]._secondScore++;
-          rooms[i].sendScoreUpdate();
+          if (rooms[i]._turn == playerID) {
+            rooms[i]._firstScore++;
+            rooms[i]._lastTurnGoal = playerID;
+            rooms[i].sendScoreUpdate();
+          } else {
+            console.log('goal came from first. But its not my turn.');
+          }
         } else if (cmdID == "turnend") {
           rooms[i]._turnEndedAtFirst = 1;
           if (rooms[i]._turnEndedAtSecond) {
-            var nextTurn = (rooms[i]._turn==1)?2:1;
+            var nextTurn = (rooms[i]._turn==rooms[i]._lastTurnGoal)?rooms[i]._turn : (rooms[i]._turn==1)?2:1;
             console.log('next turn - '+nextTurn);
             rooms[i].startTurn(nextTurn);
           } else {
@@ -279,12 +294,17 @@ function messagePass(connection, msg) {
             rooms[i].startGame();
           }
         } else if (cmdID == "goal") {
-          rooms[i]._firstScore++;
-          rooms[i].sendScoreUpdate();
+          if (rooms[i]._turn == playerID) {
+            rooms[i]._secondScore++;
+            rooms[i]._lastTurnGoal = playerID;
+            rooms[i].sendScoreUpdate();
+          } else {
+            console.log('goal came from second. But its not my turn.');
+          }
         } else if (cmdID == "turnend") {
           rooms[i]._turnEndedAtSecond = 1;
           if (rooms[i]._turnEndedAtFirst) {
-            var nextTurn = (rooms[i]._turn==1)?2:1;
+            var nextTurn = (rooms[i]._turn==rooms[i]._lastTurnGoal)?rooms[i]._turn : (rooms[i]._turn==1)?2:1;
             console.log('next turn - '+nextTurn);
             rooms[i].startTurn(nextTurn);
           } else {

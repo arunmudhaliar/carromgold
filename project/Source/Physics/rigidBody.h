@@ -56,7 +56,7 @@ public:
     inline intx GetRestitution() { return this->restitution; }
     
     inline void SetTag(const std::string& tag) { this->tag = tag; }
-    inline const std::string& GetTag() { return this->tag; }
+    inline const std::string& GetTag() const { return this->tag; }
     
     inline void SetRBName(const std::string& name) { this->name = name; }
     inline const std::string& GetRBName() { return this->name; }

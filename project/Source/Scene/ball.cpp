@@ -107,7 +107,7 @@ void Ball::SetPositionFromRB(const vector2x& pos) {
 }
 
 void Ball::OnCollision(std::vector<Collider*>& colliders) {
-    if ((GetTag()=="Coin" || GetTag() == "Queen")  && colliders.size()) {
+    if (Ball::IsCoin(*this)  && colliders.size()) {
         int sfxID = getRandom(SFX_SOUND::sfx_puck_hits_puck_1, SFX_SOUND::sfx_puck_hits_puck_5+1);
         auto sfxSrc = this->soundEnginePtr->getSource(sfxID);
         
@@ -122,7 +122,7 @@ void Ball::OnCollision(std::vector<Collider*>& colliders) {
 }
 
 void Ball::OnPhysicsUpdate() {
-    if (GetTag() == "Coin" || GetTag() == "Queen") {
+    if (Ball::IsCoin(*this)) {
         if (this->isMoving) {
             float currentVel = XTOF(GetRBVelocity().lengthx());
             float ratio = currentVel/MAX_COIN_VELOCITY;
@@ -133,7 +133,7 @@ void Ball::OnPhysicsUpdate() {
 }
 
 void Ball::OnStartedMoving() {
-    if (GetTag() == "Coin" || GetTag() == "Queen") {
+    if (Ball::IsCoin(*this)) {
         float currentVel = XTOF(GetRBVelocity().lengthx());
         float ratio = currentVel/MAX_COIN_VELOCITY;
         ratio = MIN(ratio, 1.0f);
@@ -147,7 +147,33 @@ void Ball::OnStartedMoving() {
 }
 
 void Ball::OnCameToHalt() {
-    if (GetTag() == "Coin" || GetTag() == "Queen") {
+    if (Ball::IsCoin(*this)) {
         this->sfxDragInstance->stop();
     }
+}
+
+
+bool Ball::IsCoin(const Ball& ball) {
+    auto tag = ball.GetTag();
+    return tag == "CB" || tag == "CW" || tag == "CQ";
+}
+
+bool Ball::IsQueen(const Ball& ball) {
+    auto tag = ball.GetTag();
+    return tag == "CQ";
+}
+
+bool Ball::IsBlackCoin(const Ball& ball) {
+    auto tag = ball.GetTag();
+    return tag == "CB";
+}
+
+bool Ball::IsWhiteCoin(const Ball& ball) {
+    auto tag = ball.GetTag();
+    return tag == "CW";
+}
+
+bool Ball::IsStricker(const Ball& ball) {
+    auto tag = ball.GetTag();
+    return tag == "ST";
 }

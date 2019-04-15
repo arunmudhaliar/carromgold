@@ -97,6 +97,9 @@ void Board::OnFixedUpdate(intx fixedDT) {
             // stricker update
             if (this->IsMyTurn()) {
                 this->playerStricker.UpdateStricker(fixedDT);
+                // check for overlap
+                bool isOverlap = this->physicsSolver.IsOverlapWithRigidBodies(&this->playerStricker) != nullptr;
+                this->playerStricker.SetOverlapWithCoins(isOverlap);
             }
         } else if (this->gameState == GAME_PLAYER_FIRE) {
             std::vector<int> removeCoins;
@@ -110,19 +113,24 @@ void Board::OnFixedUpdate(intx fixedDT) {
             
             for(auto c : removeCoins) {
                 auto rb = this->coins[c];
-                if (rb->GetTag() == "Coin" || rb->GetTag() =="Queen") {
+                Ball* coin = dynamic_cast<Ball*>(rb);
+                if (!coin) {
+                    continue;
+                }
+                if (Ball::IsCoin(*coin)) {
                     int sfxID = getRandom(SFX_SOUND::sfx_puck_pot_1, SFX_SOUND::sfx_puck_pot_4+1);
                     auto sfxSrc = this->soundEnginePtr->getSource(sfxID);
                     sfxSrc->play(false);
-                } else if (rb->GetTag() == "Stricker") {
+                } else if (Ball::IsStricker(*coin)) {
                     auto sfxSrc = this->soundEnginePtr->getSource(SFX_SOUND::sfx_puck_pot_2);
                     sfxSrc->play(false);
                 }
                 
                 this->physicsSolver.RemoveRigidBody(rb);
                 this->coins.erase(this->coins.find(c));
-                GX_DELETE(rb);
                 DEBUG_PRINT("===== Pocketed =====");
+                this->boardObserver->OnPocketed(*rb);
+                GX_DELETE(rb);
             }
             
             if (this->elapsedTimeSinceFire>FTOX(0.2f) && physicsSolver.IsAllRigidBodiesStopped()) {
@@ -170,6 +178,11 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
 //#endif
     
     if (canDrawBoard) {
+        // coins
+        for(auto c : coins) {
+            c.second->draw(mvp);
+        }
+        
         // render objects here
         if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
             if (this->IsMyTurn()) {
@@ -193,20 +206,16 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
             }
         }
     
-        ground.draw(mvp);
-        leftWall.draw(mvp);
-        rightWall.draw(mvp);
-        topWall.draw(mvp);
-        
-        for(auto c : coins) {
-            c.second->draw(mvp);
-        }
-        
-        //holes
-        holes[0].draw(mvp);
-        holes[1].draw(mvp);
-        holes[2].draw(mvp);
-        holes[3].draw(mvp);
+//        ground.draw(mvp);
+//        leftWall.draw(mvp);
+//        rightWall.draw(mvp);
+//        topWall.draw(mvp);
+//
+//        //holes
+//        holes[0].draw(mvp);
+//        holes[1].draw(mvp);
+//        holes[2].draw(mvp);
+//        holes[3].draw(mvp);
     }
 }
 
@@ -334,7 +343,7 @@ void Board::ResetCoins() {
     Ball* queenBall = new Ball();
     queenBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center, &this->queenSprite, this->soundEnginePtr);
     queenBall->SetColor(0.75f, 0, 0.2f);
-    queenBall->SetTag("Queen");
+    queenBall->SetTag("CQ");
     queenBall->SetRBName(util::stringFormat("c%d", ballId));
     queenBall->SetRestituition(restituition);
     this->coins[ballId++] = queenBall;
@@ -347,14 +356,16 @@ void Board::ResetCoins() {
         vector2x newPos;
         newPos.x = MULTX(r2, pxMath::COSX(startAngle+x*60));
         newPos.y = MULTX(r2, pxMath::SINX(startAngle+x*60));
+        
         if (x%2==1) {
             newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, this->soundEnginePtr);
             newBall->SetColor(0.15f, 0.15f, 0.15f);
+            newBall->SetTag("CB");
         } else {
             newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, this->soundEnginePtr);
             newBall->SetColor(0.7f, 0.7f, 0.7f);
+            newBall->SetTag("CW");
         }
-        newBall->SetTag("Coin");
         newBall->SetRBName(util::stringFormat("c%d", ballId));
         newBall->SetRestituition(restituition);
         this->coins[ballId++] = newBall;
@@ -373,11 +384,12 @@ void Board::ResetCoins() {
         if (x%2==0) {
             newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, this->soundEnginePtr);
             newBall->SetColor(0.15f, 0.15f, 0.15f);
+            newBall->SetTag("CB");
         } else {
             newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, this->soundEnginePtr);
             newBall->SetColor(0.7f, 0.7f, 0.7f);
+            newBall->SetTag("CW");
         }
-        newBall->SetTag("Coin");
         newBall->SetRBName(util::stringFormat("c%d", ballId));
         newBall->SetRestituition(restituition);
         this->coins[ballId++] = newBall;

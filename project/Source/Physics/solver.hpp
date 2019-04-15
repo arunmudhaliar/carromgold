@@ -35,6 +35,7 @@ public:
     bool IsAllRigidBodiesStopped();
     
     void ResetTimeVals();
+    RigidBody* IsOverlapWithRigidBodies(RigidBody* rb, bool onlyActiveRBs = false);
     
 private:
     std::vector<RigidBody*> rigidBodies;

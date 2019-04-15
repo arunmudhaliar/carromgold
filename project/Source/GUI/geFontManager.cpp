@@ -238,7 +238,7 @@ float geFont::getCharWidth(char charValue)
 }
 
 #define CHAR_DELAY  0.05f
-int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCentered, bool bShadowed, float elapsetime)
+int geFont::drawString(const char* str, int x, int y, int width_limit, float scale, bool bCentered, bool bShadowed, float elapsetime)
 {
     int retVal=1;
     int actual_len=(int)strlen(str);
@@ -337,6 +337,7 @@ int geFont::drawString(const char* str, int x, int y, int width_limit, bool bCen
     glBlendFunc(GL_ONE, GL_ONE);
     
     matrix4x4f transformTM;
+    transformTM.setScale(scale, scale, scale);
     
     if(bShadowed)
     {

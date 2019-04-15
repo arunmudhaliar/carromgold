@@ -26,6 +26,7 @@ void Sprite2Dx::draw(gxHWShader* shader, const matrix4x4f& viewProjection)
     const float* u_mvp_m4x4= (viewProjection * (dummyTM*rotationTM)).getMatrix();
     shader->sendUniformTMfv("u_mvp_m4x4", u_mvp_m4x4, false, 4);
     
+    shader->sendUniform4fv("u_color", this->spriteRGB);
 	glVertexAttribPointer(shader->getAttribLoc("a_vertex_coord_v4"), 2, GL_FLOAT, GL_FALSE, 0, spriteVertexArray);
     glEnableVertexAttribArray(shader->getAttribLoc("a_vertex_coord_v4"));
 

@@ -15,8 +15,8 @@
 
 #include <functional>
 
-#define STRICKER_GRAB_INNER_RADIUS_SCALE  1.5f
-#define STRICKER_GRAB_OUTER_RADIUS_SCALE  3.5f
+#define STRICKER_GRAB_INNER_RADIUS_SCALE  2.0f
+#define STRICKER_GRAB_OUTER_RADIUS_SCALE  4.0f
 // AIM CONE
 #define AIMCONE_ANGLE    180
 #define AIMCONE_ANGLE_DELTA    10
@@ -58,6 +58,7 @@ public:
         OPTION1,
         OPTION2,
         OPTION3,
+        OPTION4,
         OPTION_MAX
     };
     
@@ -85,7 +86,7 @@ public:
     void Cmd_TryShoot(const vector2x& pos, std::function<void()> callback);
     void Cmd_TryMove(const vector2x& pos);
     
-    void SetStrickerInputOption(STRICKER_INPUT_METHOD option) { this->inputOption = option; }
+    void SetStrickerInputOption(STRICKER_INPUT_METHOD option);
     
     void SetStrickerPosition(const vector2x& pos);
     
@@ -94,10 +95,16 @@ public:
     void Remote_SetAimMode(bool flag);
     void Remote_SetMoveMode(bool flag);
     
+    void SetOverlapWithCoins(bool flag);
+    inline bool IsOverlapWithCoins() { return this->overlapWithCoins; }
+    
 protected:
+    void transformationChangedx() override;
+    
     void UpdateStricker1(intx fixedDT);
     void UpdateStricker2(intx fixedDT);
     void UpdateStricker3(intx fixedDT);
+    void UpdateStricker4(intx fixedDT);
     
     void OnPostInitBall() override;
     void OnRender(const matrix4x4f& viewProjection) override;
@@ -113,16 +120,18 @@ protected:
     void MoveStricker(intx fixedDT, Ball& ball, vector2x& delta);
     void Fire();
     
-    void SetMoveArrowPositions(const vector2x& pos);
+//    void SetMoveArrowPositions(const vector2x& pos);
     bool grabed;
     
     // vars
     Sprite2Dx strickerSprite;
     Sprite2Dx directionSprite;
     Sprite2Dx moveToolSprite;
-    Sprite2Dx moveArrows[4];
+    Sprite2Dx moveToolInActionSprite;
+    Sprite2Dx aimToolSprite;
+//    Sprite2Dx moveArrows[4];
     
-    steTexturePacket* ringTexture;
+    CGETextureManager* textureManager;  // Do not delete this pointer
     
     float moveToolRotation;
     bool inputIsAim;
@@ -130,6 +139,10 @@ protected:
     float powerScale;
 
     bool breakShot;
+    bool overlapWithCoins;
+    
+    // For OPTION4
+    bool inputAimWentOutOfinnerCircle;
     
     STRICKER_INPUT_METHOD inputOption;
     vector2x inputCurrentPos;

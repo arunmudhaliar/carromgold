@@ -65,7 +65,9 @@ void NetworkManager::SendMessage(const std::string& msg) {
 void NetworkManager::InitNetwork(NetworkManagerDelegate* delegate) {
     this->delegate = delegate;
 //    std::string uri = "ws://127.0.0.1:3000";
-    std::string uri = "ws://192.168.0.105:3000";
+//    std::string uri = "ws://192.168.0.105:3000";
+    std::string uri = "ws://carromgold.herokuapp.com";
+    
     try {
         // Set logging to be pretty verbose (everything except message payloads)
 //        c.set_access_channels(websocketpp::log::alevel::all);

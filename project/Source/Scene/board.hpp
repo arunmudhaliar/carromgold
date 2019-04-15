@@ -19,7 +19,8 @@
 class Board;
 class MBoardObserver {
 public:
-    virtual void OnFinishTurn() =0;
+    virtual void OnPocketed(Ball& coin) = 0;
+    virtual void OnFinishTurn() = 0;
 };
 
 class Board : protected FixedUpdateObserver {

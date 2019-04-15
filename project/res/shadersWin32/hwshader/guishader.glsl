@@ -18,9 +18,10 @@ void main()
 uniform sampler2D u_diffuse_texture;
 uniform vec2 u_uvtile;
 varying vec2 v_uvcoord0;
+uniform vec4 u_color;
 
 void main()
 {
-	gl_FragColor = texture2D(u_diffuse_texture, v_uvcoord0*u_uvtile);
+	gl_FragColor = texture2D(u_diffuse_texture, v_uvcoord0*u_uvtile)*u_color;
 }
 #endif

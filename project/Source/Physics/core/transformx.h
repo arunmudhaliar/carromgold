@@ -218,6 +218,7 @@ public:
     {
         m[12]=pos.x;
         m[13]=pos.y;
+        transformationChangedx();
     }
 	
 	virtual void transformationChangedx(){}

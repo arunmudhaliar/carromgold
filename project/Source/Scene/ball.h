@@ -22,6 +22,13 @@ public:
     
     void initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr);
     void SetColor(float r, float g, float b, float a=1.0f);
+    
+    static bool IsCoin(const Ball& ball);
+    static bool IsQueen(const Ball& ball);
+    static bool IsBlackCoin(const Ball& ball);
+    static bool IsWhiteCoin(const Ball& ball);
+    static bool IsStricker(const Ball& ball);
+    
 protected:
     float vertexBuffer[(SEGMENTS+2)*2];
     float size;

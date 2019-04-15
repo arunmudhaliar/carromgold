@@ -8,6 +8,7 @@
 //
 
 #include "scene.h"
+#include<sstream>
 #if GEAR_APPLE
     #include <OpenGL/gl.h>
 #elif GEAR_ANDROID
@@ -87,19 +88,19 @@ void Scene::InitScene(float cx, float cy) {
 #if SHOW_DEBUG_PANEL
     // DEBUG PANEL
     debugButton1.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test1", [this](){
-        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION1);
+        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION3);
     });
     //debugButton2
     debugButton2.initButton(worldScale*vector2f(cx*0.48f-btn_width*0.5f, cy*0.45f-btn_height*0.5f), vector2f(btn_width, btn_height), "test2", [this](){
-        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION2);
+        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION4);
     });
-    debugButton3.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.45f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "test3", [this](){
-        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION3);
-    });
+//    debugButton3.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.45f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "test3", [this](){
+//        this->board.GetPlayerStricker().SetStrickerInputOption(Stricker::OPTION3);
+//    });
     
     debugBtnList.push_back(&debugButton1);
     debugBtnList.push_back(&debugButton2);
-    debugBtnList.push_back(&debugButton3);
+//    debugBtnList.push_back(&debugButton3);
 #endif
     
     //sha
@@ -224,10 +225,12 @@ void Scene::DrawStats() {
 //        geFontManager::g_pFontArial10_84Ptr->drawString((this->playerType == PLAYER_FIRST) ? "PLAYER 1" : "PLAYER 2", 45, -(60+(iterator++)*20), 200);
 //    }
 //    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("ELAPSED %lu ms", this->physicsSolver.GetElapsedTime()).c_str(), 45, -(60+(iterator++)*20), 200);
-    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(), 20, yOffset + ++iterator*20, 200);
+    geFontManager::g_pFontArial10_84Ptr->drawString(util::stringFormat("STATUS : %s", this->statusMsg.c_str()).c_str(),
+                                                    20, yOffset + ++iterator*20, 200);
     
     if (this->board.CanShowBoard()) {
-        geFontManager::g_pFontArial10_84Ptr->drawString(this->board.IsMyTurn()?"YOUR TURN":"OPPONENTS TURN", windowSize.x*0.5f, yOffset + iterator*20, 200, true);
+        geFontManager::g_pFontArial10_84Ptr->drawString(this->board.IsMyTurn()?"YOUR TURN":"OPPONENTS TURN",
+                                                        windowSize.x*0.5f, yOffset + iterator++*20, 200, true);
     }
     
     geFontManager::g_pFontArial10_84Ptr->drawString(
@@ -240,6 +243,14 @@ void Scene::DrawStats() {
     geFontManager::g_pFontArial10_84Ptr->drawString(
                                                     util::stringFormat("==>SHA : %s", this->sha256Str_incoming.c_str()).c_str(), 20, windowSize.y*0.88f, 500);
 
+    iterator+=2;
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                                                    util::stringFormat("YOU: %s", player1Score.c_str()).c_str(),
+                                                    windowSize.x*0.05f, yOffset + iterator*20, 200, 3.0f);
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                                                    util::stringFormat("OPPONENT: %s", player2Score.c_str()).c_str(),
+                                                    windowSize.x*(0.55f), yOffset + iterator*20, 200, 3.0f);
+    
 //    geFontManager::g_pFontArial10_84Ptr->drawString(
 //                                                    util::stringFormat("<<<< : %s", this->debugShootValReceived.c_str()).c_str(), 20, windowSize.y*0.88f, 500);
 
@@ -311,6 +322,11 @@ void Scene::SendPing() {
 #if ENABLE_MULTIPLAYER
 void Scene::OnNetworkMessage(const std::string& msg) {
     auto jobj = njson::parse(msg);
+    if (jobj.is_discarded()) {
+        printf("PARSE ERROR : Invalid incoming msg %s", msg.c_str());
+        return;
+    }
+    
     auto isCommand = jobj.contains("cmd");
     if (!isCommand) {
         printf("Invalid incoming msg %s", msg.c_str());
@@ -413,6 +429,14 @@ void Scene::OnNetworkMessage(const std::string& msg) {
     } else if (jcmdID == "turn_op") {
         if (gameState >= Board::GAME_START && gameState <= Board::GAME_FINISH_TURN) {
             this->board.TryTurnOpponent(true);
+        }
+    } else if (jcmdID == "score") {
+        if (gameState >= Board::GAME_START && gameState <= Board::GAME_RESET) {
+            auto jcmdValue = jcmd["value"];
+            if (jcmdValue.contains("first") && jcmdValue.contains("second")) {
+                this->player1Score = util::stringFormat("%d", jcmdValue["first"].get<int>());
+                this->player2Score = util::stringFormat("%d", jcmdValue["second"].get<int>());
+            }
         }
     }
 }
@@ -536,7 +560,17 @@ void Scene::OnFinishTurn() {
 #endif
 }
 
-#include<sstream>
+void Scene::OnPocketed(Ball& coin) {
+#if ENABLE_MULTIPLAYER
+    if (this->board.IsMyTurn()) {
+        njson j;
+        j["cmd"]["id"] = "goal";
+        auto jdump = j.dump();
+        j["cmd"]["value"] = coin.GetRBName();
+        NetworkManager::GetInstance().SendMessage(jdump);
+    }
+#endif
+}
     
 const std::string Scene::GetCurrentSha() {
     std::stringstream s;
