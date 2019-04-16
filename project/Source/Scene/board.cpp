@@ -10,15 +10,6 @@
 #include "../GUI/OSUtils.h"
 #include "../Physics/core/util.h"
 
-#define BOTTOM_TOP_WALL_HEIGHTx  ITOX(40)
-#define LEFT_RIGHT_WALL_WIDTHx  ITOX(40)
-#define BALL_SIZE 17
-#define PLAYER_WIDTHx ITOX(30)
-#define PLAYER_START_X_POSx ITOX(45)
-#define BALL_INIT_LATERAL_FORCEx vector2x(0, -ITOX(5000))
-
-#define AIM_FROM_GRAB 0
-
 Board::Board() {
     this->gameTurn = TURN_MAX;
     this->playerType = PLAYER_TYPE_MAX;
@@ -61,14 +52,14 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     strickerPos.y=0;
     strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(0.172f));
     this->bottomStrickerInitPosition = leftOriginPosx+strickerPos;
-    this->playerStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), this->bottomStrickerInitPosition,
+    this->playerStricker.InitStricker(FTOX(BALL_SIZE*1.15f), STRICKER_MASSx, STRICKER_FRICTIONx, this->bottomStrickerInitPosition,
                                       textureManager, this->soundEnginePtr, "P", observer);
     
     strickerPos = BOARD_SIZEx*FTOX(0.5f);
     strickerPos.y=0;
     strickerPos.y+=MULTX(BOARD_SIZEx.y, FTOX(1.0f-0.172f));
     this->topStrickerInitPosition = leftOriginPosx+strickerPos;
-    this->opponentStricker.InitStricker(FTOX(BALL_SIZE*1.15f), FTOX(0.3f), FTOX(0.029f), this->topStrickerInitPosition,
+    this->opponentStricker.InitStricker(FTOX(BALL_SIZE*1.15f), STRICKER_MASSx, STRICKER_FRICTIONx, this->topStrickerInitPosition,
                                         textureManager, this->soundEnginePtr, "O", observer);
     //
     
@@ -333,8 +324,8 @@ void Board::ResetCoins() {
     vector2x center;
     int ballId=0;
     
-    const intx COIN_FRICTION_FACTOR = FTOX(0.05f);
-    const intx COIN_MASS = FTOX(0.3f);
+    const intx COIN_FRICTION_FACTOR = COIN_FRICTIONx;
+    const intx COIN_MASS = COIN_MASSx;
     const intx COIN_SIZE = FTOX(15);
     intx r2 = MULTX(COIN_SIZE, FTOX(2.05f));
     intx restituition = FTOX(0.09f);

@@ -59,9 +59,11 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     } else {
         this->moveToolSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V2.png").c_str());
     }
+    this->moveToolSprite.setScale(1.2f, 1.2f);
     
     this->moveToolInActionSprite.setOffset(0, 0);
     this->moveToolInActionSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveToolInAction.png").c_str());
+    
 
     this->aimToolSprite.setOffset(0, 0);
     if (this->inputOption < OPTION4) {
@@ -95,6 +97,8 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     this->SetTag("ST");
     this->SetRBName(name);
     this->SetRestituition(367);   //=FTOX(0.09f)
+    
+    this->SetStrickerInputOption(OPTION3);
 }
 
 void Stricker::SetOverlapWithCoins(bool flag) {
@@ -979,12 +983,16 @@ void Stricker::SetStrickerInputOption(STRICKER_INPUT_METHOD option) {
         {
             this->moveToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V1.png").c_str());
             this->aimToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/AimTool_V1.png").c_str());
+            this->moveToolSprite.setScale(1.0f, 1.0f);
+            this->aimToolSprite.setScale(1.2f, 1.2f);
         }
             break;
         case OPTION4:
         {
             this->moveToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V2.png").c_str());
             this->aimToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/AimTool_V2.png").c_str());
+            this->aimToolSprite.setScale(1.0f, 1.0f);
+            this->moveToolSprite.setScale(1.2f, 1.2f);
         }
             break;
         default:

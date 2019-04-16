@@ -11,16 +11,33 @@
 
 #include <string>
 
+// Board
 #define BOARD_SIZE vector2f(600, 600)
 #define BOARD_SIZEx vector2x(ITOX(600), ITOX(600))
-
 #define BOARD_OFFSET vector2f(0, 0)
 #define BOARD_OFFSETx vector2x(0, 0)
 
+// Walls
+#define BOTTOM_TOP_WALL_HEIGHTx  ITOX(40)
+#define LEFT_RIGHT_WALL_WIDTHx  ITOX(40)
+#define BALL_SIZE 17
+#define PLAYER_WIDTHx ITOX(30)
+#define PLAYER_START_X_POSx ITOX(45)
+
+// input
+#define AIM_FROM_GRAB 0
+
+// Stricker and Coins
 #define MAX_STRICK_LENGHT   130
 #define MAX_STRICK_POWER   50000
 #define MAX_COIN_VELOCITY   1000
 #define MAX_COIN_VELOCITYx   ITOX(MAX_COIN_VELOCITY)
+
+#define STRICKER_MASSx FTOX(0.3f)
+#define STRICKER_FRICTIONx FTOX(0.029f)
+#define COIN_MASSx FTOX(0.3f)
+#define COIN_FRICTIONx FTOX(0.05f);
+//
 
 enum SFX_SOUND {
     sfx_breakshot_1,

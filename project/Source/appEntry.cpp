@@ -15,7 +15,7 @@ int GDCPhysics::appEntry() {
                                            SDL_WINDOWPOS_CENTERED,     // x position, centered
                                            SDL_WINDOWPOS_CENTERED,     // y position, centered
                                            640,                        // width, in pixels
-                                           700,                        // height, in pixels
+                                           800,                        // height, in pixels
                                            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN  /*| SDL_WINDOW_RESIZABLE  |  SDL_WINDOW_ALLOW_HIGHDPI */   // flags
                                            );
     
