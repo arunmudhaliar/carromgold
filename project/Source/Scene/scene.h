@@ -29,7 +29,7 @@
 #include "../Connection/NetworkManager.hpp"
 #endif
 
-#define SHOW_DEBUG_PANEL 1
+#define SHOW_DEBUG_PANEL 0
 
 class Scene : protected MStrickerObserver
 #if ENABLE_MULTIPLAYER

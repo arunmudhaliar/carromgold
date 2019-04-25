@@ -14,6 +14,7 @@ Stricker::Stricker() : Ball() {
     this->SetAimMode(false);
     this->SetMoveMode(false);
     this->moveToolRotation = 0.0f;
+    this->movetoolArrowAnimation = 0.0f;
     this->powerScale = 1.0f;
     this->breakShot = true;
     this->observer = nullptr;
@@ -48,8 +49,8 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     this->textureManager = &textureManager;
     this->observer = observer;
     this->strickerSprite.setOffset(0.0f, 0.0f);
-    this->strickerSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Sticker.png").c_str());
-    
+    this->strickerSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Striker.png").c_str());
+    this->strickerSprite.setAlpha(0.5f);
     this->directionSprite.setOffset(0, 1);
     this->directionSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/arrow.png").c_str());
     
@@ -59,7 +60,6 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
     } else {
         this->moveToolSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V2.png").c_str());
     }
-    this->moveToolSprite.setScale(1.2f, 1.2f);
     
     this->moveToolInActionSprite.setOffset(0, 0);
     this->moveToolInActionSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveToolInAction.png").c_str());
@@ -72,17 +72,17 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
         this->aimToolSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/AimTool_V2.png").c_str());
     }
     
-//    this->moveArrows[0].setOffset(0, 0);
-//    this->moveArrows[0].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
+    this->moveArrows[0].setOffset(0, 0);
+    this->moveArrows[0].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveToolArrow_V2.png").c_str());
 //    this->moveArrows[0].setScale(1.15f, 1.15f);
 //    this->moveArrows[1].setOffset(0, 0);
 //    this->moveArrows[1].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
 //    this->moveArrows[1].setScale(0.75f, 0.75f);
 //    this->moveArrows[1].setAlpha(0.5f);
-//    this->moveArrows[2].setOffset(0, 0);
-//    this->moveArrows[2].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
-//    this->moveArrows[2].setScale(1.15f, 1.15f);
-//    this->moveArrows[2].setRotation(180);
+    this->moveArrows[1].setOffset(0, 0);
+    this->moveArrows[1].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveToolArrow_V2.png").c_str());
+//    this->moveArrows[1].setScale(1.15f, 1.15f);
+    this->moveArrows[1].setRotation(180);
 //    this->moveArrows[3].setOffset(0, 0);
 //    this->moveArrows[3].loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/MoveArrow.png").c_str());
 //    this->moveArrows[3].setRotation(180);
@@ -92,13 +92,18 @@ void Stricker::InitStricker(intx size, intx mass, intx frictionfactor, const vec
 //    if (this->inputOption==OPTION3) {
 ////        this->moveToolSprite.setScale(1.2f, 1.2f);
 //    }
-    this->initBall(size, mass, frictionfactor, pos, &this->strickerSprite, soundEnginePtr);
+    
+    //shadowSprite
+    this->shadowSprite.setOffset(0, 0);
+    this->shadowSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/StickerShadow.png").c_str());
+    
+    this->initBall(size, mass, frictionfactor, pos, &this->strickerSprite, &this->shadowSprite, soundEnginePtr);
     this->SetColor(0.5f, 0.58f, 0.4f);
     this->SetTag("ST");
     this->SetRBName(name);
-    this->SetRestituition(367);   //=FTOX(0.09f)
+    this->SetRestituition(STRICKER_BOUNCE_FACTORx);   //=FTOX(0.09f)
     
-    this->SetStrickerInputOption(OPTION3);
+    this->SetStrickerInputOption(OPTION4);
 }
 
 void Stricker::SetOverlapWithCoins(bool flag) {
@@ -330,9 +335,7 @@ void Stricker::OnCameToHalt() {
 void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
     auto shader = HWShaderManager::GetHWShaderManager().GetHWShader(2);
     shader->enableProgram();
-    if (this->inputIsAim) {
-        this->directionSprite.draw(shader, viewProjection);
-    } else {
+    if (!this->inputIsAim) {
         if (this->inputOption==OPTION3 || this->inputOption==OPTION4) {
             if (!this->IsGrabed()) {
                 this->moveToolSprite.draw(shader, viewProjection);
@@ -347,16 +350,20 @@ void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
         }
     }
     
-//    if (this->inputOption==OPTION3) {
-//        if (!this->IsGrabed() || this->inputIsMove) {
-//            for(int x=0;x<4;x++) {
-//                if (x%2==1) {
-//                    continue;
-//                }
-//                this->moveArrows[x].draw(shader, viewProjection);
-//            }
-//        }
-//    }
+    if (this->inputOption==OPTION4) {
+        if (!this->IsGrabed()/* || this->inputIsMove*/) {
+            for(int x=0;x<2;x++) {
+                vector2x oldPos = this->moveArrows[x].getPosition2x();
+                float displacement = (x%2==0)?-20.0f:20.0f;
+//                float alpha = this->movetoolArrowAnimation*2.0f-;
+                float alpha = (this->movetoolArrowAnimation<0.5f)?this->movetoolArrowAnimation*2.0f:(0.5f-(this->movetoolArrowAnimation-0.5f))*2.0f;
+                this->moveArrows[x].setAlpha(alpha);
+                this->moveArrows[x].setPositionx(oldPos+vector2x(FTOX(this->movetoolArrowAnimation*displacement), 0));
+                this->moveArrows[x].draw(shader, viewProjection);
+                this->moveArrows[x].setPositionx(oldPos);
+            }
+        }
+    }
     shader->disableProgram();
     
     
@@ -378,6 +385,12 @@ void Stricker::DrawPreHelperSprites(const matrix4x4f& viewProjection) {
 }
 
 void Stricker::DrawPostHelperSprites(const matrix4x4f& viewProjection) {
+    auto shader = HWShaderManager::GetHWShaderManager().GetHWShader(2);
+    shader->enableProgram();
+    if (this->inputIsAim) {
+        this->directionSprite.draw(shader, viewProjection);
+    }
+    shader->disableProgram();
 }
 
 void Stricker::DrawGrabCircle(const matrix4x4f& viewProjection) {
@@ -586,13 +599,23 @@ void Stricker::transformationChangedx() {
     this->aimToolSprite.setPositionx(pos);
 //    this->SetMoveArrowPositions(pos);
     this->directionSprite.setPositionx(pos);
+    
+    auto radiusOuter = MULTX(this->GetRadius(), FTOX(STRICKER_GRAB_OUTER_RADIUS_SCALE))+ITOX(3);
+    this->moveArrows[0].setPositionx(pos-vector2x(radiusOuter, 0));
+    this->moveArrows[1].setPositionx(pos+vector2x(radiusOuter, 0));
+
 }
 
 void Stricker::UpdateStricker4(intx fixedDT) {
     float rotationSpeed = 60.0f;
+    float moveArrowSpeed = 1.0f;
     this->moveToolRotation += (rotationSpeed*XTOF(fixedDT));
+    this->movetoolArrowAnimation += (moveArrowSpeed*XTOF(fixedDT));
     if (this->moveToolRotation>=360.0f) {
         this->moveToolRotation = 0.0f;
+    }
+    if (this->movetoolArrowAnimation>1.0f) {
+        this->movetoolArrowAnimation = 0.0f;
     }
     auto strickerPosx = GetRBPosition();
     vector2x inputDiffx = strickerPosx - this->inputCurrentPos;
@@ -983,16 +1006,12 @@ void Stricker::SetStrickerInputOption(STRICKER_INPUT_METHOD option) {
         {
             this->moveToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V1.png").c_str());
             this->aimToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/AimTool_V1.png").c_str());
-            this->moveToolSprite.setScale(1.0f, 1.0f);
-            this->aimToolSprite.setScale(1.2f, 1.2f);
         }
             break;
         case OPTION4:
         {
             this->moveToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/MoveTool_V2.png").c_str());
             this->aimToolSprite.loadTexture(this->textureManager, OSUtils::cpp_getPath("res/sprites/AimTool_V2.png").c_str());
-            this->aimToolSprite.setScale(1.0f, 1.0f);
-            this->moveToolSprite.setScale(1.2f, 1.2f);
         }
             break;
         default:

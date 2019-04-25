@@ -44,6 +44,10 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
     this->queenSprite.setOffset(0.0f, 0.0f);
     this->queenSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/RedP.png").c_str());
     
+    //coinShadowSprite
+    this->coinShadowSprite.setOffset(0.0f, 0.0f);
+    this->coinShadowSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/CoinShadow.png").c_str());
+
     // stricker default position
     // Note: This is default stricker position.
     // But it will change according to the player type after player identification from server
@@ -169,11 +173,6 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
 //#endif
     
     if (canDrawBoard) {
-        // coins
-        for(auto c : coins) {
-            c.second->draw(mvp);
-        }
-        
         // render objects here
         if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
             if (this->IsMyTurn()) {
@@ -183,10 +182,9 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
             }
         }
         
-        if (this->IsMyTurn()) {
-            playerStricker.draw(mvp);
-        } else {
-            opponentStricker.draw(mvp);
+        // coins
+        for(auto c : coins) {
+            c.second->draw(mvp);
         }
         
         if (this->gameState==GAME_PLAYER_PLACE_STRICKER) {
@@ -195,6 +193,12 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
             } else {
                 this->opponentStricker.DrawPostHelperSprites(mvp);
             }
+        }
+        
+        if (this->IsMyTurn()) {
+            playerStricker.draw(mvp);
+        } else {
+            opponentStricker.draw(mvp);
         }
     
 //        ground.draw(mvp);
@@ -326,13 +330,15 @@ void Board::ResetCoins() {
     
     const intx COIN_FRICTION_FACTOR = COIN_FRICTIONx;
     const intx COIN_MASS = COIN_MASSx;
-    const intx COIN_SIZE = FTOX(15);
+    const intx COIN_SIZE = FTOX(16);
     intx r2 = MULTX(COIN_SIZE, FTOX(2.05f));
-    intx restituition = FTOX(0.09f);
+    intx restituition = COIN_BOUNCE_FACTORx;
+    
+//    center = this->bottomStrickerInitPosition+vector2x(0, FX_ONE)*ITOX(50);
     
     // queen coin
     Ball* queenBall = new Ball();
-    queenBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center, &this->queenSprite, this->soundEnginePtr);
+    queenBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center, &this->queenSprite, &this->coinShadowSprite, this->soundEnginePtr);
     queenBall->SetColor(0.75f, 0, 0.2f);
     queenBall->SetTag("CQ");
     queenBall->SetRBName(util::stringFormat("c%d", ballId));
@@ -349,11 +355,11 @@ void Board::ResetCoins() {
         newPos.y = MULTX(r2, pxMath::SINX(startAngle+x*60));
         
         if (x%2==1) {
-            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, this->soundEnginePtr);
+            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, &this->coinShadowSprite, this->soundEnginePtr);
             newBall->SetColor(0.15f, 0.15f, 0.15f);
             newBall->SetTag("CB");
         } else {
-            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, this->soundEnginePtr);
+            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, &this->coinShadowSprite, this->soundEnginePtr);
             newBall->SetColor(0.7f, 0.7f, 0.7f);
             newBall->SetTag("CW");
         }
@@ -373,11 +379,11 @@ void Board::ResetCoins() {
         newPos.x = MULTX(r, pxMath::COSX(startAngle+x*30));
         newPos.y = MULTX(r, pxMath::SINX(startAngle+x*30));
         if (x%2==0) {
-            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, this->soundEnginePtr);
+            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->blackCoinSprite, &this->coinShadowSprite, this->soundEnginePtr);
             newBall->SetColor(0.15f, 0.15f, 0.15f);
             newBall->SetTag("CB");
         } else {
-            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, this->soundEnginePtr);
+            newBall->initBall(COIN_SIZE, COIN_MASS, COIN_FRICTION_FACTOR, center+newPos, &this->whiteCoinSprite, &this->coinShadowSprite, this->soundEnginePtr);
             newBall->SetColor(0.7f, 0.7f, 0.7f);
             newBall->SetTag("CW");
         }

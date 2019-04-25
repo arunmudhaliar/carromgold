@@ -117,7 +117,7 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
         vector2x contactNormal;
         rb->SetStateInActiveCollision(false);
         bool collidedWithBoxColliders, collidedWithRB;
-        auto prevCheckVal = rb->AllAddForCheck();
+//        auto prevCheckVal = rb->AllAddForCheck();
         CheckCollisions(rb, newPos, rb->GetRadiusSq(), collisionHappened, contactNormal, outColliders,
                         collidedWithBoxColliders, collidedWithRB);
         if (collisionHappened) {
@@ -133,16 +133,31 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
                         prevCheckVal, collidedWithBoxColliders, rb->ToString().c_str());
              */
         } else {
-            rb->SetRBVelocity((oldVel+outVelocity)*rb->GetFrictionFactor());
+//            rb->SetRBVelocity((oldVel+outVelocity)*rb->GetFrictionFactor());
+            rb->SetRBVelocity(oldVel+outVelocity);
             rb->SetRBPosition(newPos, true);
         }
         
-        rb->PhysicsUpdate();
+        auto currentVel = rb->GetRBVelocity();
+        if (currentVel.lengthx()<FTOX(0.5f)) {
+            currentVel.zerox();
+            rb->SetRBVelocity(currentVel);
+            rb->ClearForce();
+        } else {
+//            intx currentVel_mag = currentVel.lengthx();
+//            currentVel.normalizex();
+//            intx frictionFactor = MULTX64(currentVel_mag, FTOX(1.2f));
+//            frictionFactor = MULTX64(frictionFactor, (FX_ONE-rb->GetFrictionFactor()));
+//            rb->AddForce(-currentVel*frictionFactor);
+            rb->AddForce(-currentVel*(FX_ONE-rb->GetFrictionFactor()));
+        }
         
 #if ISGRAVITY
         intx gravity = MULTX(GRAVITY, rb->GetRBMass());
         rb->AddForce(vector2x(0, gravity));
 #endif
+        
+        rb->PhysicsUpdate();
     }
 }
 

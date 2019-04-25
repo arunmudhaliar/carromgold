@@ -128,6 +128,7 @@ protected:
     Sprite2Dx whiteCoinSprite;
     Sprite2Dx blackCoinSprite;
     Sprite2Dx queenSprite;
+    Sprite2Dx coinShadowSprite;
     
     // dont delete this pointer
     SoundEngine* soundEnginePtr;

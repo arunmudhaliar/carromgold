@@ -22,6 +22,7 @@
 #include "../nlohmann/json.hpp"
 #include "../sha256/sha256.h"
 
+#define BUILD_VERSION_CODE  1000001
 using njson = nlohmann::json;
 
 Scene& Scene::GetInstance() {
@@ -242,6 +243,10 @@ void Scene::DrawStats() {
                                                     util::stringFormat("SHA : %s", this->sha256Str.c_str()).c_str(), 20, windowSize.y*0.90f, 500);
     geFontManager::g_pFontArial10_84Ptr->drawString(
                                                     util::stringFormat("==>SHA : %s", this->sha256Str_incoming.c_str()).c_str(), 20, windowSize.y*0.88f, 500);
+    geFontManager::g_pFontArial10_84Ptr->drawString(
+                                                    util::stringFormat("BUILD : %ld", BUILD_VERSION_CODE).c_str(), 20, windowSize.y*0.96f, 500);
+
+    //BUILD_VERSION_CODE
 
     iterator+=2;
     geFontManager::g_pFontArial10_84Ptr->drawString(

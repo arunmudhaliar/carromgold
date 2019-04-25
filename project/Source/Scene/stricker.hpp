@@ -15,7 +15,7 @@
 
 #include <functional>
 
-#define STRICKER_GRAB_INNER_RADIUS_SCALE  2.0f
+#define STRICKER_GRAB_INNER_RADIUS_SCALE  2.5f
 #define STRICKER_GRAB_OUTER_RADIUS_SCALE  4.0f
 // AIM CONE
 #define AIMCONE_ANGLE    180
@@ -129,10 +129,12 @@ protected:
     Sprite2Dx moveToolSprite;
     Sprite2Dx moveToolInActionSprite;
     Sprite2Dx aimToolSprite;
-//    Sprite2Dx moveArrows[4];
+    Sprite2Dx moveArrows[2];
+    Sprite2Dx shadowSprite;
     
     CGETextureManager* textureManager;  // Do not delete this pointer
     
+    float movetoolArrowAnimation;
     float moveToolRotation;
     bool inputIsAim;
     bool inputIsMove;

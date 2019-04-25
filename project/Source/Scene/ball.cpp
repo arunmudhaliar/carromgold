@@ -21,6 +21,7 @@ Ball::Ball() {
     memset(vertexBuffer, 0 , sizeof(vertexBuffer));
     SetColor(0.75f, 0, 0.2f);
     this->sprite = nullptr;
+    this->shadowSprite = nullptr;
     this->soundEnginePtr = nullptr;
     this->sfxDragInstance = nullptr;
 }
@@ -36,10 +37,11 @@ void Ball::SetColor(float r, float g, float b, float a) {
     this->color[3] = a;
 }
 
-void Ball::initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr) {
+void Ball::initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, Sprite2Dx* shadowSprite, SoundEngine* soundEnginePtr) {
     this->soundEnginePtr = soundEnginePtr;
     this->size = XTOF(size);
     this->sprite = sprite;
+    this->shadowSprite = shadowSprite;
     SetRadius(size);
     SetMass(mass);
     SetFrictionFactor(frictionFactor);
@@ -84,6 +86,10 @@ void Ball::OnRender(const matrix4x4f& viewProjection) {
 #if USE_ProgrammablePipeLine
     auto shader = HWShaderManager::GetHWShaderManager().GetHWShader(2);
     shader->enableProgram();
+    if (this->shadowSprite) {
+        this->shadowSprite->setPositionx(p[12], p[13], p[14]);
+        this->shadowSprite->draw(shader, viewProjection);
+    }
     this->sprite->setPositionx(p[12], p[13], p[14]);
     this->sprite->draw(shader, viewProjection);
     shader->disableProgram();

@@ -20,7 +20,7 @@ public:
     Ball();
     virtual ~Ball();
     
-    void initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, SoundEngine* soundEnginePtr);
+    void initBall(intx size, intx mass, intx frictionFactor, const vector2x& pos, Sprite2Dx* sprite, Sprite2Dx* shadowSprite, SoundEngine* soundEnginePtr);
     void SetColor(float r, float g, float b, float a=1.0f);
     
     static bool IsCoin(const Ball& ball);
@@ -45,6 +45,7 @@ protected:
 
     float color[4];
     Sprite2Dx* sprite;
+    Sprite2Dx* shadowSprite;
     
     SoundEngine* soundEnginePtr;
     SoundSource* sfxDragInstance;
