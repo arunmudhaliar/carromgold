@@ -59,6 +59,7 @@ public:
         OPTION2,
         OPTION3,
         OPTION4,
+        OPTION5,
         OPTION_MAX
     };
     
@@ -105,6 +106,7 @@ protected:
     void UpdateStricker2(intx fixedDT);
     void UpdateStricker3(intx fixedDT);
     void UpdateStricker4(intx fixedDT);
+    void UpdateStricker5(intx fixedDT);
     
     void OnPostInitBall() override;
     void OnRender(const matrix4x4f& viewProjection) override;
@@ -129,7 +131,7 @@ protected:
     Sprite2Dx moveToolSprite;
     Sprite2Dx moveToolInActionSprite;
     Sprite2Dx aimToolSprite;
-    Sprite2Dx moveArrows[2];
+    Sprite2Dx moveArrows[8];
     Sprite2Dx shadowSprite;
     
     CGETextureManager* textureManager;  // Do not delete this pointer

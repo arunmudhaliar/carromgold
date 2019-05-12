@@ -114,6 +114,9 @@ protected:
     std::map<int, Ball*> coins;
     intx elapsedTimeSinceFire;
     
+    Sprite2Dx moveAreaBgSprite;
+    Sprite2Dx barBGSprite;
+    
     Hole holes[4];
     Wall ground;
     Wall topWall;

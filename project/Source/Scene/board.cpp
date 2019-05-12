@@ -67,6 +67,15 @@ void Board::InitBoard(const vector2i& viewPort, CGETextureManager& textureManage
                                         textureManager, this->soundEnginePtr, "O", observer);
     //
     
+    moveAreaBgSprite.setOffset(0, 0);
+    moveAreaBgSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Highlight_BlueBar.png").c_str());
+    moveAreaBgSprite.setPositionx(this->bottomStrickerInitPosition);
+    
+    barBGSprite.setOffset(0, 0);
+    barBGSprite.loadTexture(&textureManager, OSUtils::cpp_getPath("res/sprites/Bar_1.png").c_str());
+    barBGSprite.setPositionx(this->bottomStrickerInitPosition);
+    //    barBGSprite.setScale(1.018f, 1.018f);
+    
     this->SetGameState(GAME_INIT);
 #if !ENABLE_MULTIPLAYER
     this->SetPlayerType(PLAYER_FIRST);
@@ -158,6 +167,10 @@ void Board::DrawBoard(const matrix4x4f& viewProjection) {
     bgSprite.draw(guishader, viewProjection);
     if (canDrawBoard) {
         boardSprite.draw(guishader, mvp);
+        if (!this->playerStricker.IsGrabed() && this->gameState==GAME_PLAYER_PLACE_STRICKER) {
+            moveAreaBgSprite.draw(guishader, viewProjection);
+            barBGSprite.draw(guishader, viewProjection);
+        }
     }
     guishader->disableProgram();
 #else
