@@ -79,12 +79,12 @@ public:
     
     inline Solver& GetPhysicsSolver() { return this->physicsSolver; }
     inline const std::map<int, Ball*>& GetCoins() { return this->coins; }
+    void ResetCoins();
     
 protected:
     
     void StopAllCoins();
     void SetGameState(GAME_STATE state);
-    void ResetCoins();
     
     void OnGameStateChange(GAME_STATE from);
     void OnGameInit();

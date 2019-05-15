@@ -85,6 +85,11 @@ public:
 		return oon;
 	}
 	
+    std::string ToString() {
+        char buffer[128];
+        sprintf(buffer, "(%5.2f, %5.2f, %5.2f)", XTOF(x), XTOF(y), XTOF(z));
+        return std::string(buffer);
+    }
 };
 
 #endif

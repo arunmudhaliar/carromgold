@@ -107,7 +107,8 @@ void Scene::InitScene(float cx, float cy) {
     //sha
 //    debugButton4
     debugButton4.initButton(worldScale*vector2f(-cx*0.48f+btn_width*0.5f,  cy*0.4f-btn_height*0.5f - btn_height*2.5f), vector2f(btn_width, btn_height), "shacheck", [this](){
-        this->CheckShas();
+        //this->CheckShas();
+        this->board.ResetCoins();
     });
     debugBtnList.push_back(&debugButton4);
     

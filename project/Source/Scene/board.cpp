@@ -337,6 +337,12 @@ void Board::OnGameInit() {
 }
 
 void Board::ResetCoins() {
+    for (auto c : this->coins) {
+        this->physicsSolver.RemoveRigidBody(c.second);
+        GX_DELETE(c.second);
+    }
+    this->coins.clear();
+    
     // add coins
     vector2x center;
     int ballId=0;
@@ -467,6 +473,7 @@ void Board::OnGameStart() {
 void Board::OnGamePlayerPlaceStricker() {
     StopAllCoins();
     if (this->IsMyTurn()) {
+        DEBUG_PRINT("Flight time %3.2f", (this->physicsSolver.GetElapsedTime())/1000.0f);
         DEBUG_PRINT("========== PLACE STRICKER ==========");
         this->playerStricker.SetRBPosition(this->playerType==PLAYER_FIRST?this->bottomStrickerInitPosition:this->topStrickerInitPosition, true);
         this->playerStricker.Cmd_PlaceStricker();

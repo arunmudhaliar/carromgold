@@ -116,6 +116,7 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
         bool collisionHappened = false;
         vector2x contactNormal;
         rb->SetStateInActiveCollision(false);
+        rb->SetRBVelocity(oldVel+outVelocity);
         bool collidedWithBoxColliders, collidedWithRB;
 //        auto prevCheckVal = rb->AllAddForCheck();
         CheckCollisions(rb, newPos, rb->GetRadiusSq(), collisionHappened, contactNormal, outColliders,
@@ -134,22 +135,32 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
              */
         } else {
 //            rb->SetRBVelocity((oldVel+outVelocity)*rb->GetFrictionFactor());
-            rb->SetRBVelocity(oldVel+outVelocity);
+//            rb->SetRBVelocity(oldVel+outVelocity);
             rb->SetRBPosition(newPos, true);
         }
         
         auto currentVel = rb->GetRBVelocity();
-        if (currentVel.lengthx()<FTOX(0.5f)) {
+        if (currentVel.lengthx()<FTOX(5.0f)) {
             currentVel.zerox();
             rb->SetRBVelocity(currentVel);
             rb->ClearForce();
         } else {
-//            intx currentVel_mag = currentVel.lengthx();
+//            //D = Cd * .5 * r * V^2 * A
+//            intx velSq = currentVel.lengthSquaredx();
 //            currentVel.normalizex();
-//            intx frictionFactor = MULTX64(currentVel_mag, FTOX(1.2f));
-//            frictionFactor = MULTX64(frictionFactor, (FX_ONE-rb->GetFrictionFactor()));
-//            rb->AddForce(-currentVel*frictionFactor);
-            rb->AddForce(-currentVel*(FX_ONE-rb->GetFrictionFactor()));
+////            intx frictionFactor = MULTX64(currentVel_mag, FTOX(1.2f));
+//            intx frictionFactor = MULTX64(velSq, rb->GetFrictionFactor());
+//            intx Cd = rb->GetFrictionFactor();
+//            intx half = DIVX(FX_ONE, ITOX(2));
+//            intx r = ITOX(1);
+//            intx A = FX_ONE;
+//            intx Da = MULTX64(Cd, half);
+//            intx Db = MULTX64(Da, r);
+//            intx Dc = MULTX64(Db, velSq);
+//            intx D = MULTX64(Dc, A);
+            
+//            rb->AddForce(-currentVel*D);
+            rb->AddForce(-currentVel*rb->GetFrictionFactor());
         }
         
 #if ISGRAVITY
@@ -161,10 +172,10 @@ void Solver::UpdatePhysics(__int64_t step, intx fixedDT) {
     }
 }
 
-void CalculateImpulse(RigidBody& A, RigidBody& B, vector2x& Avel, vector2x& Bvel) {
+bool CalculateImpulse(vector2x& newAPos, RigidBody& A, RigidBody& B, vector2x& Avel, vector2x& Bvel) {
     // Calculate relative velocity
     vector2x rv = B.GetRBVelocity() - A.GetRBVelocity();
-    vector2x normal = B.GetRBPosition() - A.GetRBPosition();
+    vector2x normal = B.GetRBPosition() - newAPos;
     normal.normalizex();
     
     // Calculate relative velocity in terms of the normal direction
@@ -172,29 +183,29 @@ void CalculateImpulse(RigidBody& A, RigidBody& B, vector2x& Avel, vector2x& Bvel
     
     
     // Do not resolve if velocities are separating
-    if(velAlongNormal > 0)
-        return;
+    if(velAlongNormal > 0) {
+        return false;
+    }
 //    velAlongNormal = MAX(velAlongNormal, -ITOX(1000));
 //    printf("velAlongNormal %5.2f\n", XTOF(velAlongNormal));
     
     // Calculate restitution
     intx ea = A.GetRestitution();
     intx eb = B.GetRestitution();
+    intx e = MIN(ea, eb);
     
     // Calculate impulse scalar
-    intx ja = MULTX(-(FX_ONE + ea), velAlongNormal);
-    intx jb = MULTX(-(FX_ONE + eb), velAlongNormal);
+    intx j = MULTX(-(FX_ONE + e), velAlongNormal);
     intx massAinv = DIVX(FX_ONE, A.GetRBMass());
     intx massBinv = DIVX(FX_ONE, B.GetRBMass());
     
-    ja = DIVX(ja, massAinv + massBinv);
-    jb = DIVX(jb, massAinv + massBinv);
+    j = DIVX(j, (massAinv + massBinv));
     
     // Apply impulse
-    vector2x impulseA = normal * ja;
-    vector2x impulseB = normal * jb;
-    Avel = -impulseA * massAinv;
-    Bvel = impulseB * massBinv;
+    vector2x impulse = normal * j;
+    Avel = -impulse * massAinv;
+    Bvel = impulse * massBinv;
+    return true;
 }
 
 bool Solver::IsAllRigidBodiesStopped() {
@@ -246,8 +257,8 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
             for (int x = 0; x<4; x++) {
                 vector2x i1, i2;
                 intx s, t;
-                auto velocity = rb->GetRBPosition() - newPos;
-                if (velocity.lengthx()>0) {
+                auto currentDisplacement = rb->GetRBPosition() - newPos;
+                if (currentDisplacement.lengthx()>0) {
                     util::twoLineSegmentIntersection(rb->GetRBPosition(), newPos, borders[x*2+0], borders[x*2+1], i1, i2, s, t);
                 } else {
                     i2 = util::closestPointOnLine(newPos, borders[x*2+0], borders[x*2+1]);
@@ -256,7 +267,7 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
                 auto diff = newPos-i2;
                 boxCollider->setDebugPos(i2, x);
                 if (diff.lengthSquaredx()<=radiusSq) {
-                    diff= diff+velocity;
+                    diff= diff+currentDisplacement;
                     diff.normalizex();
                     auto calcPos = i2 + diff*(rb->GetRadius()+FX_ONE);
                     avgPos+=calcPos;
@@ -277,41 +288,6 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
                     cnt++;
                 }
             }
-            
-//            // Check for penetration
-//            // Note: We are not checking penitration for now.
-//            bPenitration = false;
-//
-//            //which one is the closest
-//            __int64_t closest_length=GX_MAX_INT;
-//            int closest_index=-1;
-//
-//            for (int l=0; l<4; l++) {
-//                vector2x diff(newPos-closestPt[l]);
-//                __int64_t length=diff.lengthSquaredx();
-//                if(length<closest_length) {
-//                    closest_length=length;
-//                    closest_index=l;
-//
-//                    if(bPenitration) {
-//                        diff=-diff;
-//                    }
-//
-//                    if(closest_length <= radiusSq) {
-//                        // Collision occured
-//                        diff.normalizex();
-//                        intx radius = (intx)pxMath::SQRT((__int64_t)radiusSq);
-//                        auto contactPt = closestPt[closest_index];
-//                        vector2x calc_Pos(contactPt + diff*radius);
-//                        avgPos+=calc_Pos;
-//                        avgNrml+=diff;
-//                        cnt++;
-//                        colliders.push_back(boxCollider);
-//                        boxCollider->CollidedWithRB(rb, contactPt, diff);
-//                    }
-//                }
-//            }//for
-//            //~circle-rectangle collision
         }
         
         // all rigid bodies
@@ -329,20 +305,23 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
             if (diff.lengthSquaredx()<=r2sq) {
                 diff.normalizex();
                 auto calcPos = orb->GetRBPosition() + diff*(orb->GetRadius()+rb->GetRadius());
-                avgPos+=calcPos;
 //                DEBUG_PRINT("cnt:%d, avgPosL: %d, %d", cnt, avgPos.x, avgPos.y);
-                avgNrml+=diff;
                 if (std::find(colliders.begin(), colliders.end(), orb)==colliders.end()) {
                     colliders.push_back(orb);
                     vector2x rbVelToAdd;
                     vector2x orbVelToAdd;
-                    CalculateImpulse(*rb, *orb, rbVelToAdd, orbVelToAdd);
-                    rb->AddRBVelocity(rbVelToAdd);
-                    orb->SetRBVelocity(orbVelToAdd);
-                    rb->setDebugPos(closestPt);
-                    collidedWithRB = true;
+                    if (CalculateImpulse(calcPos, *rb, *orb, rbVelToAdd, orbVelToAdd)) {
+                        rb->AddRBVelocity(rbVelToAdd);
+                        orb->AddRBVelocity(orbVelToAdd);
+//                        DEBUG_PRINT("hit:%d %s-->%s JA:%s, JB:%s", collision_check_cntr, rb->GetRBName().c_str(),
+//                                    orb->GetRBName().c_str(), rbVelToAdd.ToString().c_str(), orbVelToAdd.ToString().c_str());
+                        rb->setDebugPos(closestPt);
+                        collidedWithRB = true;
+                        avgPos+=calcPos;
+                        avgNrml+=diff;
+                        cnt++;
+                    }
                 }
-                cnt++;
             }
         }
         
@@ -350,12 +329,17 @@ void Solver::CheckCollisions(RigidBody* rb, vector2x& newPos, intx radiusSq,
 //            DEBUG_PRINT("cnt:%d, avgPosB: %d, %d", cnt, avgPos.x, avgPos.y);
             avgPos.x=DIVX(avgPos.x,ITOX(cnt));
             avgPos.y=DIVX(avgPos.y,ITOX(cnt));
+            avgNrml.x=DIVX(avgNrml.x,ITOX(cnt));
+            avgNrml.y=DIVX(avgNrml.y,ITOX(cnt));
             // normali
             avgNrml.normalizex();
             contactNormal = avgNrml;
             newPos=avgPos;
             collisionHappened = true;
         } else {
+//            if(collisionHappened) {
+//                DEBUG_PRINT("BREAK COLLISION LOOP AT %d", collision_check_cntr);
+//            }
             break;  //break the loop
         }
     }

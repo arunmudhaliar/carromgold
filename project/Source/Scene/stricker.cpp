@@ -1071,7 +1071,7 @@ void Stricker::Fire() {
     
     intx scaled_diff = MULTX64(diff_mag, POWER_DELTA);
     scaled_diff = MIN(scaled_diff, MAX_ALLOWED_POWER);
-    //    DEBUG_PRINT("scaled_diff %d", XTOI(scaled_diff));
+        DEBUG_PRINT("scaled_diff %d", XTOI(scaled_diff));
     //    scaled_diff = FTOX(40000);
     SetRBVelocity(vector2x());
     AddForce(diffStartToCurrent*scaled_diff);

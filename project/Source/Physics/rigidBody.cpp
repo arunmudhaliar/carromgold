@@ -115,7 +115,7 @@ void RigidBody::SetRBVelocity(const vector2x& velocity) {
 }
 
 void RigidBody::SetFrictionFactor(intx factor) {
-    frictionFactor = FX_ONE - factor;
+    frictionFactor = factor;
 }
 
 float RigidBody::GetKineticEnergy() {

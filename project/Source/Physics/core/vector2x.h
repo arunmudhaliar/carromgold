@@ -12,6 +12,8 @@
 
 #include "pxMath.h"
 #include "vector2.h"
+#include <string>
+
 class vector2x
 {
 public:
@@ -71,6 +73,11 @@ public:
         return oon;
 	}
 	
+    std::string ToString() {
+        char buffer[128];
+        sprintf(buffer, "(%5.2f, %5.2f)", XTOF(x), XTOF(y));
+        return std::string(buffer);
+    }
 };
 
 #endif
